@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electro-Lab Digital — IPN</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   VARIABLES Y RESET
+   ============================================================ */
+:root {
+  --bg:   #070b12;
+  --bg2:  #0d1420;
+  --bg3:  #111827;
+  --bg4:  #151f2e;
+  --b:    #1e3a5f;
+  --bb:   #2563eb;
+  --a:    #2563eb;
+  --ag:   #3b82f6;
+  --a2:   #06b6d4;
+  --a3:   #10b981;
+  --aw:   #f59e0b;
+  --ar:   #ef4444;
+  --t:    #e2e8f0;
+  --td:   #94a3b8;
+  --tf:   #475569;
+  --mono: 'Share Tech Mono', monospace;
+  --head: 'Exo 2', sans-serif;
+  --body: 'Rajdhani', sans-serif;
+  --r: 8px;
+  --sw: 260px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--t);
+  font-family: var(--body); font-size: 15px;
+  min-height: 100vh; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(37,99,235,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+#app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ============================================================
+   TOPNAV
+   ============================================================ */
+.tnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 56px; gap: 12px;
+  background: rgba(7,11,18,.96); border-bottom: 1px solid var(--b);
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
+}
+.brand {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--head); font-weight: 900; font-size: 1rem;
+  letter-spacing: .05em; white-space: nowrap;
+}
+.brand .bolt { color: var(--a); font-size: 1.2rem; }
+.brand .sub  { color: var(--a2); font-size: .65rem; font-family: var(--mono); margin-left: 2px; }
+
+.ptabs {
+  display: flex; gap: 3px;
+  background: var(--bg2); border: 1px solid var(--b);
+  border-radius: var(--r); padding: 3px; flex-shrink: 0;
+}
+.ptab {
+  padding: 5px 14px; border-radius: 5px;
+  font-family: var(--body); font-weight: 600; font-size: 12px;
+  cursor: pointer; border: none; background: transparent;
+  color: var(--td); transition: all .2s; letter-spacing: .04em;
+}
+.ptab.on  { background: var(--a); color: #fff; }
+.ptab:hover:not(.on) { color: var(--t); background: rgba(37,99,235,.1); }
+
+.usr { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--td); flex-shrink: 0; }
+.av  { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--a2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; }
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.main    { display: flex; flex: 1; }
+.sidebar {
+  width: var(--sw); min-height: calc(100vh - 56px);
+  background: var(--bg2); border-right: 1px solid var(--b);
+  padding: 16px 0; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ss { padding: 8px 16px 4px; font-family: var(--mono); font-size: 10px; color: var(--tf); letter-spacing: .12em; text-transform: uppercase; }
+.si {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; font-family: var(--body); font-weight: 500; font-size: 13px;
+  color: var(--td); cursor: pointer;
+  border-left: 3px solid transparent; transition: all .15s;
+}
+.si:hover          { background: rgba(37,99,235,.06); color: var(--t); }
+.si.on             { background: rgba(37,99,235,.1); color: var(--ag); border-left-color: var(--a); }
+.si .ico           { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.sbadge            { margin-left: auto; background: var(--a); color: #fff; font-size: 9px; font-family: var(--mono); padding: 2px 5px; border-radius: 8px; }
+
+/* ============================================================
+   CONTENIDO Y PÁGINAS
+   ============================================================ */
+.content { flex: 1; padding: 24px; overflow-y: auto; max-width: 100%; }
+.page    { display: none; animation: fu .3s ease; }
+.page.on { display: block; }
+@keyframes fu { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.ptitle { font-family: var(--head); font-weight: 700; font-size: 1.5rem; margin-bottom: 4px; letter-spacing: .02em; }
+.psub   { color: var(--td); font-family: var(--mono); font-size: 11px; margin-bottom: 22px; }
+h3      { font-family: var(--head); font-weight: 600; font-size: 1rem; margin-bottom: 12px; }
+
+/* ============================================================
+   GRILLAS
+   ============================================================ */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.ga  { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--bg3); border: 1px solid var(--b);
+  border-radius: var(--r); padding: 18px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.card:hover { border-color: var(--bb); box-shadow: 0 0 20px rgba(37,99,235,.08); }
+.card-t     { font-family: var(--head); font-weight: 600; font-size: .95rem; margin-bottom: 6px; }
+
+.scard { background: var(--bg3); border: 1px solid var(--b); border-radius: var(--r); padding: 18px; display: flex; align-items: center; gap: 14px; }
+.sico  { width: 46px; height: 46px; background: rgba(37,99,235,.12); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.sval  { font-family: var(--head); font-weight: 700; font-size: 1.7rem; color: var(--ag); }
+.slbl  { font-family: var(--mono); font-size: 11px; color: var(--td); }
+
+/* ============================================================
+   PROGRESS, TAGS, BOTONES, DIVIDERS
+   ============================================================ */
+.pw { background: rgba(255,255,255,.05); border-radius: 4px; height: 5px; margin-top: 8px; }
+.pb { height: 5px; border-radius: 4px; background: linear-gradient(90deg, var(--a), var(--a2)); transition: width .6s ease; }
+
+.tag  { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .06em; }
+.tb   { background: rgba(37,99,235,.15); color: var(--ag); border: 1px solid rgba(37,99,235,.3); }
+.tc   { background: rgba(6,182,212,.12); color: var(--a2); border: 1px solid rgba(6,182,212,.3); }
+.tg   { background: rgba(16,185,129,.12); color: var(--a3); border: 1px solid rgba(16,185,129,.3); }
+.tw   { background: rgba(245,158,11,.12); color: var(--aw); border: 1px solid rgba(245,158,11,.3); }
+.tr   { background: rgba(239,68,68,.12); color: var(--ar); border: 1px solid rgba(239,68,68,.3); }
+
+.btn  { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--r); font-family: var(--body); font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all .2s; letter-spacing: .04em; }
+.bp   { background: var(--a); color: #fff; }
+.bp:hover { background: var(--ag); box-shadow: 0 0 16px rgba(37,99,235,.4); }
+.bo   { background: transparent; color: var(--ag); border: 1px solid var(--bb); }
+.bo:hover { background: rgba(37,99,235,.1); }
+.bg   { background: transparent; color: var(--td); border: 1px solid var(--b); }
+.bg:hover { border-color: var(--bb); color: var(--t); }
+.bs   { background: var(--a3); color: #fff; }
+.bs:hover { box-shadow: 0 0 16px rgba(16,185,129,.4); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+hr.div { border: none; border-top: 1px solid var(--b); margin: 18px 0; }
+
+/* ============================================================
+   PRACTICE CARDS (vista lista)
+   ============================================================ */
+.pcard        { background: var(--bg3); border: 1px solid var(--b); border-radius: var(--r); overflow: hidden; cursor: pointer; transition: all .25s; }
+.pcard:hover  { border-color: var(--a); box-shadow: 0 0 24px rgba(37,99,235,.12); transform: translateY(-2px); }
+.pch          { background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(6,182,212,.08)); padding: 14px 18px 12px; border-bottom: 1px solid var(--b); display: flex; align-items: flex-start; gap: 10px; }
+.pnum         { font-family: var(--mono); font-size: 11px; color: var(--a2); background: rgba(6,182,212,.1); border: 1px solid rgba(6,182,212,.25); padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+.pt           { font-family: var(--head); font-weight: 700; font-size: .95rem; }
+.pb2          { color: var(--td); font-size: 13px; padding: 12px 18px 14px; line-height: 1.5; }
+.pf           { padding: 10px 18px; border-top: 1px solid var(--b); display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,.15); flex-wrap: wrap; gap: 6px; }
+
+/* ============================================================
+   CHECKLIST, CIRCUIT, FORM ELEMENTS
+   ============================================================ */
+.chk  { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.chi  { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg4); border-radius: 6px; border: 1px solid var(--b); font-size: 13px; }
+.chi input[type=checkbox] { accent-color: var(--a); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+
+.circuit { background: #0a1628; border: 1px solid var(--b); border-radius: var(--r); padding: 14px; font-family: var(--mono); font-size: 12px; color: var(--a2); margin: 8px 0; white-space: pre; overflow-x: auto; }
+
+input[type=text], input[type=email], input[type=number], select, textarea {
+  background: var(--bg4); border: 1px solid var(--b); border-radius: 6px;
+  color: var(--t); font-family: var(--body); font-size: 13px;
+  padding: 8px 12px; width: 100%; outline: none; transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--a); }
+textarea   { resize: vertical; min-height: 80px; }
+label      { font-size: 12px; color: var(--td); font-family: var(--mono); display: block; margin-bottom: 4px; }
+select option { background: var(--bg3); }
+
+/* ============================================================
+   QUIZ (integrado en tareas)
+   ============================================================ */
+.qwrap { display: flex; flex-direction: column; gap: 14px; }
+.qitem { background: var(--bg4); border: 1px solid var(--b); border-radius: var(--r); padding: 14px; }
+.qtext { font-weight: 600; font-size: 14px; font-family: var(--head); margin-bottom: 10px; }
+.qopts { display: flex; flex-direction: column; gap: 6px; }
+.qopt  {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg3);
+  border: 1px solid var(--b); border-radius: 6px;
+  cursor: pointer; font-size: 13px; transition: all .2s;
+}
+.qopt:hover   { border-color: var(--a); background: rgba(37,99,235,.06); }
+.qopt.sel     { border-color: var(--a); background: rgba(37,99,235,.12); color: var(--ag); }
+.qopt.cor     { border-color: var(--a3) !important; background: rgba(16,185,129,.1) !important; color: var(--a3); }
+.qopt.err     { border-color: var(--ar) !important; background: rgba(239,68,68,.08) !important; color: var(--ar); }
+.qopt input   { accent-color: var(--a); flex-shrink: 0; }
+.qfb {
+  font-family: var(--mono); font-size: 11px; margin-top: 8px;
+  padding: 6px 10px; border-radius: 5px;
+}
+.qfb.ok  { background: rgba(16,185,129,.1); color: var(--a3); border: 1px solid rgba(16,185,129,.25); }
+.qfb.bad { background: rgba(239,68,68,.08); color: var(--ar); border: 1px solid rgba(239,68,68,.25); }
+
+/* ============================================================
+   DROP ZONE
+   ============================================================ */
+.drop {
+  border: 2px dashed var(--b); border-radius: var(--r);
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--bg4);
+}
+.drop:hover, .drop.drag { border-color: var(--a); background: rgba(37,99,235,.05); }
+
+/* ============================================================
+   FORO (docente)
+   ============================================================ */
+.fpost  { background: var(--bg4); border: 1px solid var(--b); border-radius: var(--r); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color .2s; }
+.fpost:hover { border-color: var(--a); }
+.fau    { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fav    { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.fav.doc { background: rgba(37,99,235,.2); color: var(--ag); }
+.fav.stu { background: rgba(16,185,129,.2); color: var(--a3); }
+.fname  { font-weight: 600; font-size: 13px; font-family: var(--head); }
+.ftime  { font-family: var(--mono); font-size: 10px; color: var(--tf); }
+.ftext  { font-size: 13px; color: var(--td); line-height: 1.5; }
+
+/* ============================================================
+   COMPONENTES DE HARDWARE
+   ============================================================ */
+.comp { background: var(--bg4); border: 1px solid var(--b); border-radius: var(--r); overflow: hidden; transition: all .2s; cursor: pointer; }
+.comp:hover { border-color: var(--a2); }
+.comp-img  { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 44px; background: linear-gradient(135deg, rgba(6,182,212,.08), rgba(37,99,235,.06)); }
+.comp-info { padding: 12px; }
+.comp-name { font-family: var(--head); font-weight: 600; font-size: .9rem; margin-bottom: 3px; }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty {
+  grid-column: 1/-1; text-align: center;
+  padding: 60px 20px; color: var(--td);
+}
+.empty .eico { font-size: 40px; margin-bottom: 12px; }
+.empty .etxt { font-family: var(--mono); font-size: 12px; }
+.empty .esub { font-size: 12px; color: var(--tf); margin-top: 6px; }
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(7,11,18,.88); z-index: 200; backdrop-filter: blur(4px); overflow-y: auto; padding: 40px 20px; }
+.overlay.on { display: flex; align-items: flex-start; justify-content: center; }
+.modal  { background: var(--bg2); border: 1px solid var(--b); border-radius: 12px; width: 100%; max-width: 820px; overflow: hidden; }
+.mhead  { background: linear-gradient(135deg, rgba(37,99,235,.2), rgba(6,182,212,.08)); padding: 20px 24px; border-bottom: 1px solid var(--b); display: flex; justify-content: space-between; align-items: flex-start; }
+.mbody  { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.mcol   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mclose { background: rgba(255,255,255,.06); border: 1px solid var(--b); border-radius: 6px; color: var(--td); padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 12px; }
+.mclose:hover { color: var(--t); border-color: var(--ag); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .sidebar { width: 100%; min-height: auto; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--b); padding: 8px; }
+  .si { padding: 6px 10px; font-size: 12px; border-left: none; border-bottom: 2px solid transparent; }
+  .si.on { border-bottom-color: var(--a); border-left-color: transparent; background: rgba(37,99,235,.06); }
+  .ss { display: none; }
+  .main { flex-direction: column; }
+  .content { padding: 14px; }
+  .g2, .g3, .ga { grid-template-columns: 1fr; }
+  .mcol { grid-template-columns: 1fr; }
+  .ptabs { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ============================================================
+     TOPNAV
+     ============================================================ -->
+<nav class="tnav">
+  <div class="brand">
+    <span class="bolt">⚡</span>
+    Electro-Lab<span class="sub">IPN</span>
+  </div>
+
+  <div class="ptabs">
+    <button class="ptab on"  onclick="setPanel('student', this)">🎒 Alumno</button>
+    <button class="ptab"     onclick="setPanel('teacher', this)">👨‍🏫 Docente</button>
+    <button class="ptab"     onclick="setPanel('hardware', this)">🔧 Biblioteca</button>
+  </div>
+
+  <div class="usr">
+    <span id="role-label">—</span>
+    <div class="av" id="av-initials">…</div>
+  </div>
+</nav>
+
+
+<div class="main">
+
+  <!-- ===========================================================
+       SIDEBAR ALUMNO
+       =========================================================== -->
+  <aside class="sidebar" id="sidebar-student">
+    <div class="ss">Principal</div>
+    <div class="si on" onclick="showPage('s-dashboard', this, 'sidebar-student')"><span class="ico">🏠</span>Dashboard</div>
+    <div class="si"    onclick="showPage('s-practicas', this, 'sidebar-student'); ElectroLab.renderStudentPractices()"><span class="ico">⚗️</span>Prácticas</div>
+    <div class="si"    onclick="showPage('s-tareas',    this, 'sidebar-student'); ElectroLab.renderStudentTasks()"   ><span class="ico">📋</span>Mis Tareas</div>
+    <div class="ss">Recursos</div>
+    <div class="si"    onclick="showPage('s-lab',       this, 'sidebar-student')"><span class="ico">🔬</span>Lab Virtual</div>
+    <div class="si"    onclick="showPage('s-comp',      this, 'sidebar-student')"><span class="ico">🧩</span>Componentes</div>
+  </aside>
+
+  <!-- ===========================================================
+       SIDEBAR DOCENTE
+       =========================================================== -->
+  <aside class="sidebar" id="sidebar-teacher" style="display:none">
+    <div class="ss">Gestión</div>
+    <div class="si on" onclick="showPage('t-dashboard', this, 'sidebar-teacher')"><span class="ico">📊</span>Dashboard</div>
+    <div class="si"    onclick="showPage('t-practicas', this, 'sidebar-teacher'); ElectroLab.renderTeacherPractices()"><span class="ico">📝</span>Mis Prácticas</div>
+    <div class="si"    onclick="showPage('t-editor',    this, 'sidebar-teacher')"><span class="ico">✏️</span>Editor de Práctica</div>
+    <div class="si"    onclick="showPage('t-alumnos',   this, 'sidebar-teacher')"><span class="ico">👥</span>Alumnos</div>
+    <div class="ss">Colaboración</div>
+    <div class="si"    onclick="showPage('t-foro',      this, 'sidebar-teacher'); ElectroLab.renderPendingSubmissions()"><span class="ico">💬</span>Foro / Calificaciones</div>
+    <div class="si"    onclick="showPage('t-subir',     this, 'sidebar-teacher')"><span class="ico">📤</span>Subir Material</div>
+  </aside>
+
+  <!-- ===========================================================
+       SIDEBAR BIBLIOTECA
+       =========================================================== -->
+  <aside class="sidebar" id="sidebar-hardware" style="display:none">
+    <div class="ss">Módulo Físico</div>
+    <div class="si on" onclick="showPage('h-modulo',     this, 'sidebar-hardware')"><span class="ico">🖥️</span>El Módulo</div>
+    <div class="si"    onclick="showPage('h-arduino',    this, 'sidebar-hardware')"><span class="ico">🤖</span>Arduino UNO</div>
+    <div class="si"    onclick="showPage('h-componentes',this, 'sidebar-hardware')"><span class="ico">💡</span>Componentes</div>
+    <div class="ss">Practica</div>
+    <div class="si"    onclick="showPage('h-circuitos',  this, 'sidebar-hardware')"><span class="ico">⚡</span>Circuitos Propuestos</div>
+    <div class="si"    onclick="showPage('h-codigo',     this, 'sidebar-hardware')"><span class="ico">💾</span>Código Arduino</div>
+  </aside>
+
+
+  <!-- ===========================================================
+       ÁREA DE CONTENIDO
+       =========================================================== -->
+  <div class="content">
+
+
+    <!-- ========================================================
+         PANEL ALUMNO — PÁGINAS
+         ======================================================== -->
+
+    <!-- S: DASHBOARD -->
+    <div class="page on" id="s-dashboard">
+      <div class="ptitle">Dashboard</div>
+      <div class="psub" id="dash-subtitle">// Cargando…</div>
+
+      <div class="g3" style="margin-bottom:20px">
+        <div class="scard"><div class="sico">📚</div><div><div class="sval" id="dash-completed">0</div><div class="slbl">PRÁCTICAS COMPLETADAS</div></div></div>
+        <div class="scard"><div class="sico">⏳</div><div><div class="sval" id="dash-pending">0</div><div class="slbl">TAREAS PENDIENTES</div></div></div>
+        <div class="scard"><div class="sico">📦</div><div><div class="sval" id="dash-total">0</div><div class="slbl">PRÁCTICAS DISPONIBLES</div></div></div>
+      </div>
+
+      <div class="g2">
+        <div>
+          <h3>Prácticas disponibles</h3>
+          <div class="card">
+            <div id="dash-prac-list" style="display:flex;flex-direction:column;gap:10px">
+              <div class="empty"><div class="eico">📭</div><div class="etxt">Aún no hay prácticas publicadas.</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Mis entregas</h3>
+          <div class="card">
+            <div id="dash-submissions" style="display:flex;flex-direction:column;gap:10px">
+              <div class="empty"><div class="eico">📮</div><div class="etxt">No has entregado nada todavía.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S: PRÁCTICAS -->
+    <div class="page" id="s-practicas">
+      <div class="ptitle">Prácticas del Curso</div>
+      <div class="psub">// Solo se muestran las prácticas publicadas por el docente</div>
+      <div class="ga" id="prac-list">
+        <div class="empty"><div class="eico">📭</div><div class="etxt">Aún no hay prácticas publicadas.</div><div class="esub">Tu maestro las irá subiendo durante el curso.</div></div>
+      </div>
+    </div>
+
+    <!-- S: MIS TAREAS (cuestionarios y fotos integrados aquí) -->
+    <div class="page" id="s-tareas">
+      <div class="ptitle">Mis Tareas</div>
+      <div class="psub">// Completa cuestionarios y sube fotos directamente desde aquí</div>
+      <div id="task-list">
+        <div class="empty"><div class="eico">🎉</div><div class="etxt">No hay tareas pendientes.</div></div>
+      </div>
+    </div>
+
+    <!-- S: LAB VIRTUAL -->
+    <div class="page" id="s-lab">
+      <div class="ptitle">Laboratorio Virtual</div>
+      <div class="psub">// Documentación técnica y materiales del módulo</div>
+      <div id="lab-materials" class="ga">
+        <div class="empty"><div class="eico">📂</div><div class="etxt">El docente aún no ha subido materiales.</div></div>
+      </div>
+    </div>
+
+    <!-- S: COMPONENTES -->
+    <div class="page" id="s-comp">
+      <div class="ptitle">Practica con tus Componentes</div>
+      <div class="psub">// Funcionamiento básico de cada pieza del módulo</div>
+      <div class="ga" id="comp-cards">
+        <!-- Contenido estático — componentes del módulo físico -->
+      </div>
+    </div>
+
+
+    <!-- ========================================================
+         PANEL DOCENTE — PÁGINAS
+         ======================================================== -->
+
+    <!-- T: DASHBOARD -->
+    <div class="page" id="t-dashboard" style="display:none">
+      <div class="ptitle">Panel del Docente</div>
+      <div class="psub" id="teacher-subtitle">// Cargando…</div>
+
+      <div class="g3" style="margin-bottom:14px">
+        <div class="scard"><div class="sico">📝</div><div><div class="sval" id="t-total-pracs">0</div><div class="slbl">PRÁCTICAS CREADAS</div></div></div>
+        <div class="scard"><div class="sico">✅</div><div><div class="sval" id="t-published">0</div><div class="slbl">PUBLICADAS</div></div></div>
+        <div class="scard"><div class="sico">⏳</div><div><div class="sval" id="t-pending-grade">0</div><div class="slbl">POR CALIFICAR</div></div></div>
+      </div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="scard"><div class="sico">👥</div><div><div class="sval" id="t-student-count">0</div><div class="slbl">ALUMNOS INSCRITOS</div></div></div>
+        <div class="scard"><div class="sico">📤</div><div><div class="sval" id="t-total-submissions">0</div><div class="slbl">ENTREGAS TOTALES</div></div></div>
+      </div>
+
+      <div class="g2">
+        <div>
+          <h3>Entregas recientes</h3>
+          <div class="card" id="t-recent-submissions">
+            <div class="empty"><div class="eico">📮</div><div class="etxt">Sin entregas todavía.</div></div>
+          </div>
+        </div>
+        <div>
+          <h3>Estado del grupo</h3>
+          <div class="card" id="t-group-status">
+            <div class="empty"><div class="eico">👥</div><div class="etxt">Publica prácticas para ver el progreso.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T: MIS PRÁCTICAS -->
+    <div class="page" id="t-practicas" style="display:none">
+      <div class="ptitle">Mis Prácticas</div>
+      <div class="psub">// Gestiona las prácticas del curso</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn bp" onclick="showPage('t-editor', document.querySelector('#sidebar-teacher .si:nth-child(3)'), 'sidebar-teacher')">+ Nueva Práctica</button>
+      </div>
+      <div class="ga" id="t-prac-list">
+        <div class="empty"><div class="eico">📝</div><div class="etxt">Aún no has creado prácticas.</div><div class="esub">Usa el Editor para crear la primera.</div></div>
+      </div>
+    </div>
+
+    <!-- T: EDITOR DE PRÁCTICA -->
+    <div class="page" id="t-editor" style="display:none">
+      <div class="ptitle">Editor de Práctica</div>
+      <div class="psub">// Rellena los campos — la plataforma genera el formato automáticamente</div>
+
+      <div class="g2">
+        <!-- Columna izquierda -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div class="card">
+            <h3>Información General</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div><label>Número de Práctica</label><input type="text" id="ed-num" placeholder="Ej: P-01"></div>
+              <div><label>Título</label><input type="text" id="ed-title" placeholder="Control de Intensidad con PWM"></div>
+              <div><label>Objetivo</label><textarea id="ed-objective" placeholder="Al finalizar, el alumno comprenderá…"></textarea></div>
+              <div>
+                <label>Dificultad</label>
+                <select id="ed-difficulty">
+                  <option value="1">⭐ Básica</option>
+                  <option value="2" selected>⭐⭐ Intermedia</option>
+                  <option value="3">⭐⭐⭐ Avanzada</option>
+                </select>
+              </div>
+              <div>
+                <label>Tipo de entrega del alumno</label>
+                <select id="ed-delivery">
+                  <option value="photo">📷 Foto de práctica realizada</option>
+                  <option value="quiz">📝 Cuestionario en plataforma</option>
+                  <option value="both">📋 Ambos (foto + cuestionario)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Lista de Materiales / Componentes</h3>
+            <div style="font-size:12px;color:var(--td);font-family:var(--mono);margin-bottom:8px">Marca los componentes que se necesitan en el módulo físico</div>
+            <div class="chk" id="ed-comp-list">
+              <div class="chi"><input type="checkbox"><span>Arduino UNO</span></div>
+              <div class="chi"><input type="checkbox"><span>LED rojo 5mm</span></div>
+              <div class="chi"><input type="checkbox"><span>LED verde 5mm</span></div>
+              <div class="chi"><input type="checkbox"><span>LED azul 5mm</span></div>
+              <div class="chi"><input type="checkbox"><span>Resistencia 220Ω</span></div>
+              <div class="chi"><input type="checkbox"><span>Resistencia 1kΩ</span></div>
+              <div class="chi"><input type="checkbox"><span>Potenciómetro 10kΩ</span></div>
+              <div class="chi"><input type="checkbox"><span>Botón pulsador</span></div>
+              <div class="chi"><input type="checkbox"><span>Buzzer activo</span></div>
+              <div class="chi"><input type="checkbox"><span>Sensor TMP36</span></div>
+              <div class="chi"><input type="checkbox"><span>Display 7 segmentos</span></div>
+              <div class="chi"><input type="checkbox"><span>Protoboard</span></div>
+              <div class="chi"><input type="checkbox"><span>Jumpers</span></div>
+              <div class="chi"><input type="checkbox"><span>Multímetro</span></div>
+            </div>
+            <button class="btn bg btn-sm" style="margin-top:8px" onclick="addCustomComponent()">+ Componente personalizado</button>
+          </div>
+
+        </div>
+
+        <!-- Columna derecha -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div class="card">
+            <h3>Pasos de la Práctica</h3>
+            <div id="ed-steps" style="display:flex;flex-direction:column;gap:8px">
+              <div class="step-row" style="display:flex;gap:8px;align-items:flex-start">
+                <span class="tag tc" style="flex-shrink:0;margin-top:8px">01</span>
+                <textarea placeholder="Primer paso de la práctica…" style="flex:1;min-height:56px"></textarea>
+              </div>
+            </div>
+            <button class="btn bg btn-sm" style="margin-top:10px" onclick="addStep()">+ Agregar paso</button>
+          </div>
+
+          <div class="card">
+            <h3>Diagrama de Conexión</h3>
+            <div style="font-size:12px;color:var(--td);font-family:var(--mono);margin-bottom:8px">Escribe el diagrama en texto ASCII o describe las conexiones</div>
+            <textarea id="ed-circuit" style="font-family:var(--mono);font-size:12px;min-height:100px" placeholder="[Pin 9] ─── [R 220Ω] ─── [LED+] ─── [GND]"></textarea>
+          </div>
+
+          <div class="card">
+            <h3>Código Arduino (.ino)</h3>
+            <textarea id="ed-code" style="font-family:var(--mono);font-size:12px;min-height:110px" placeholder="void setup() { ... }&#10;void loop()  { ... }"></textarea>
+          </div>
+
+          <div class="card">
+            <h3>Archivos Adjuntos</h3>
+            <div style="font-size:12px;color:var(--td);font-family:var(--mono);margin-bottom:8px">PDF, imágenes, videos y archivos .ino de apoyo</div>
+            <div class="drop" data-context="material" id="editor-drop"
+                 onclick="this.querySelector('input').click()">
+              <input type="file" multiple
+                     accept=".pdf,.ino,image/jpeg,image/png,video/mp4,video/quicktime"
+                     onchange="handleEditorFiles(event)">
+              <div style="font-size:28px;margin-bottom:8px">📁</div>
+              <div style="font-family:var(--mono);font-size:12px;color:var(--td)">Arrastra o haz clic</div>
+              <div style="font-size:11px;color:var(--tf);margin-top:4px">PDF · .ino · Imágenes · Video · máx. 50 MB c/u</div>
+            </div>
+            <div id="editor-file-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn bp" style="flex:1" onclick="ElectroLab.saveFromEditor(true)">🟢 Publicar Práctica</button>
+            <button class="btn bg"                onclick="ElectroLab.saveFromEditor(false)">📄 Guardar Borrador</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- T: ALUMNOS -->
+    <div class="page" id="t-alumnos" style="display:none">
+      <div class="ptitle">Alumnos del Grupo</div>
+      <div class="psub">// G2 — Electrotecnia IPN</div>
+
+      <div class="g2" style="margin-bottom:20px">
+
+        <!-- Formulario de inscripción -->
+        <div class="card">
+          <h3>Inscribir Alumno</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div><label>Nombre completo</label><input type="text" id="enroll-name" placeholder="Juan Méndez García"></div>
+            <div><label>Matrícula</label><input type="text" id="enroll-matricula" placeholder="2022XXXXX"></div>
+            <div><label>Correo institucional</label><input type="email" id="enroll-email" placeholder="alumno@ipn.mx"></div>
+            <div>
+              <label>Grupo</label>
+              <select id="enroll-group">
+                <option value="G1">G1</option>
+                <option value="G2" selected>G2</option>
+                <option value="G3">G3</option>
+                <option value="G4">G4</option>
+              </select>
+            </div>
+            <button class="btn bp" onclick="ElectroLab.submitEnrollForm()">+ Inscribir Alumno</button>
+          </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="scard">
+            <div class="sico">👥</div>
+            <div><div class="sval" id="t-student-count">0</div><div class="slbl">ALUMNOS INSCRITOS</div></div>
+          </div>
+          <div class="card" style="font-size:13px;color:var(--td);line-height:1.7">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--tf);letter-spacing:.1em;margin-bottom:8px">INSTRUCCIONES</div>
+            Inscribe a los alumnos uno por uno o importa la lista desde tu BD cuando la tengas lista.<br><br>
+            La matrícula es el identificador único. No se permiten duplicados.<br><br>
+            El botón <span class="tag tr" style="font-size:9px">Dar de baja</span> desactiva al alumno — sus entregas se conservan en el historial.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabla de alumnos -->
+      <h3>Alumnos Registrados</h3>
+      <div class="card" style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:600px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--b);font-family:var(--mono);font-size:10px;color:var(--tf)">
+              <th style="padding:8px;text-align:left">Alumno / Matrícula</th>
+              <th style="padding:8px;text-align:left">Grupo</th>
+              <th style="padding:8px;text-align:left">Correo</th>
+              <th style="padding:8px;text-align:left">Entregas</th>
+              <th style="padding:8px;text-align:left">Promedio</th>
+              <th style="padding:8px;text-align:left">Estado / Acción</th>
+            </tr>
+          </thead>
+          <tbody id="student-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- T: FORO / CALIFICACIONES -->
+    <div class="page" id="t-foro" style="display:none">
+      <div class="ptitle">Foro de Colaboración</div>
+      <div class="psub">// Califica entregas y deja retroalimentación a tus alumnos</div>
+
+      <!-- Campo oculto para ID de entrega seleccionada -->
+      <input type="hidden" id="foro-submission-id" value="">
+
+      <div class="g2">
+        <div>
+          <h3>Entregas Pendientes</h3>
+          <div id="foro-entregas">
+            <div class="empty"><div class="eico">✅</div><div class="etxt">No hay entregas pendientes de calificar.</div></div>
+          </div>
+        </div>
+        <div>
+          <h3>Agregar Calificación</h3>
+          <div class="card" style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label>Alumno</label>
+              <select id="foro-student">
+                <!-- Se rellena desde AppState.students -->
+              </select>
+            </div>
+            <div>
+              <label>Práctica</label>
+              <select id="foro-practice">
+                <option value="">— Selecciona una práctica —</option>
+              </select>
+            </div>
+            <div>
+              <label>Calificación (0–10)</label>
+              <input type="number" id="foro-grade" min="0" max="10" step="0.5" placeholder="8.5">
+            </div>
+            <div>
+              <label>Comentario para el alumno</label>
+              <textarea id="foro-feedback" placeholder="Buen trabajo, aunque la resistencia limitadora debería ser 220Ω…"></textarea>
+            </div>
+            <button class="btn bp" onclick="ElectroLab.submitGradeFromForum()">Enviar Retroalimentación</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T: SUBIR MATERIAL -->
+    <div class="page" id="t-subir" style="display:none">
+      <div class="ptitle">Subir Material</div>
+      <div class="psub">// Repositorio del docente — materiales de apoyo para los alumnos</div>
+
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <h3>Nuevo Material</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div><label>Título del material</label><input type="text" id="mat-title" placeholder="Guía de referencia Ley de Ohm"></div>
+              <div>
+                <label>Categoría</label>
+                <select id="mat-category">
+                  <option value="pdf">📄 PDF / Guía</option>
+                  <option value="video">🎥 Video</option>
+                  <option value="code">💾 Código Arduino (.ino)</option>
+                  <option value="image">🖼️ Diagrama / Imagen</option>
+                </select>
+              </div>
+              <div>
+                <label>Práctica relacionada (opcional)</label>
+                <select id="mat-practice">
+                  <option value="">— General (sin práctica específica) —</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="drop" data-context="material" id="mat-drop"
+               onclick="this.querySelector('input').click()">
+            <input type="file" id="mat-file-input"
+                   accept=".pdf,.ino,image/jpeg,image/png,video/mp4,video/quicktime"
+                   onchange="handleMaterialUpload(event)">
+            <div style="font-size:32px;margin-bottom:8px">📤</div>
+            <div style="font-family:var(--mono);font-size:12px;color:var(--td)">Arrastra el archivo aquí</div>
+            <div style="font-size:11px;color:var(--tf);margin-top:4px">PDF · .ino · PNG · JPG · MP4 · máx. 50 MB</div>
+          </div>
+
+          <button class="btn bp" onclick="saveMaterial()">Publicar Material</button>
+        </div>
+
+        <div>
+          <h3>Materiales Publicados</h3>
+          <div class="card" id="mat-list" style="display:flex;flex-direction:column;gap:8px;min-height:100px">
+            <div class="empty"><div class="eico">📂</div><div class="etxt">Sin materiales subidos todavía.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================
+         PANEL BIBLIOTECA — PÁGINAS
+         ======================================================== -->
+
+    <!-- H: EL MÓDULO -->
+    <div class="page" id="h-modulo" style="display:none">
+      <div class="ptitle">El Módulo de Electrotecnia</div>
+      <div class="psub">// Hardware físico — Ecosistema IPN de Aprendizaje Híbrido</div>
+      <div class="g2" style="margin-bottom:20px">
+        <div class="card">
+          <div style="font-size:48px;text-align:center;padding:20px;background:rgba(37,99,235,.05);border-radius:6px;margin-bottom:12px">🖥️</div>
+          <div class="card-t">Módulo Físico de Electrotecnia</div>
+          <div style="font-size:13px;color:var(--td);line-height:1.6;margin-top:8px">
+            Plataforma de aprendizaje práctico que conecta la teoría eléctrica con la implementación real. Incluye Arduino UNO, panel de LEDs, fuente de alimentación, resistencias y conectores integrados.
+          </div>
+        </div>
+        <div class="card">
+          <h3>Especificaciones</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px"><span style="color:var(--td)">Microcontrolador</span><span class="tag tc">Arduino UNO</span></div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px"><span style="color:var(--td)">Voltaje operación</span><span>5V / 12V</span></div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px"><span style="color:var(--td)">Pines digitales</span><span>14 (6 PWM)</span></div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px"><span style="color:var(--td)">Pines analógicos</span><span>6</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--td)">Conectividad</span><span>USB-B / UART</span></div>
+          </div>
+        </div>
+      </div>
+      <h3>Mapa de Componentes del Módulo</h3>
+      <div class="circuit">
+┌─────────────────────────────────────────────────────────────┐
+│  [ARDUINO UNO]    [FUENTE 12V]    [REGULADOR 5V]            │
+│       │                │                  │                  │
+│  ─────┼────────────────┼──────────────────┼──────────────   │
+│  [LED R][LED G][LED B]  [RESISTENCIAS]    [POTENCIÓMETRO]   │
+│  [BOTÓN 1][BOTÓN 2]     [PROTOBOARD]      [DISPLAY 7-SEG]   │
+│  [BUZZER]               [JUMPERS]         [SENSOR TEMP]     │
+└─────────────────────────────────────────────────────────────┘</div>
+    </div>
+
+    <!-- H: ARDUINO UNO -->
+    <div class="page" id="h-arduino" style="display:none">
+      <div class="ptitle">Arduino UNO</div>
+      <div class="psub">// Cerebro del módulo — documentación técnica</div>
+      <div class="g2">
+        <div class="card">
+          <div style="font-size:42px;text-align:center;margin-bottom:10px">🤖</div>
+          <div class="card-t">Arduino UNO R3</div>
+          <div style="font-size:13px;color:var(--td);line-height:1.6;margin:8px 0">
+            Microcontrolador ATmega328P. Integrado en el módulo físico del IPN para prácticas de circuitos digitales y analógicos.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-family:var(--mono);margin-top:10px">
+            <div style="color:var(--a2)">// Pines PWM: 3, 5, 6, 9, 10, 11</div>
+            <div style="color:var(--a2)">// Analógicos: A0–A5</div>
+            <div style="color:var(--a2)">// Comunicación: UART, SPI, I2C</div>
+            <div style="color:var(--a3)">// Voltaje lógico: 5V</div>
+            <div style="color:var(--a3)">// Corriente máx. por pin: 40 mA</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Ejemplo — Blink básico</h3>
+          <div style="background:#020912;border-radius:6px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.9">
+            <div style="color:var(--tf)">// Primer programa: parpadeo del LED integrado</div>
+            <div style="color:var(--a2)">void <span style="color:var(--a3)">setup</span>() {</div>
+            <div style="color:var(--t);padding-left:16px">pinMode(<span style="color:var(--aw)">13</span>, OUTPUT);</div>
+            <div style="color:var(--a2)">}</div>
+            <div style="color:var(--a2)">void <span style="color:var(--a3)">loop</span>() {</div>
+            <div style="color:var(--t);padding-left:16px">digitalWrite(<span style="color:var(--aw)">13</span>, HIGH);</div>
+            <div style="color:var(--t);padding-left:16px">delay(<span style="color:var(--aw)">1000</span>);</div>
+            <div style="color:var(--t);padding-left:16px">digitalWrite(<span style="color:var(--aw)">13</span>, LOW);</div>
+            <div style="color:var(--t);padding-left:16px">delay(<span style="color:var(--aw)">1000</span>);</div>
+            <div style="color:var(--a2)">}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- H: COMPONENTES -->
+    <div class="page" id="h-componentes" style="display:none">
+      <div class="ptitle">Biblioteca de Componentes</div>
+      <div class="psub">// Todos los elementos del módulo físico</div>
+      <div class="ga" id="hw-comp-list"></div>
+    </div>
+
+    <!-- H: CIRCUITOS -->
+    <div class="page" id="h-circuitos" style="display:none">
+      <div class="ptitle">Circuitos Propuestos</div>
+      <div class="psub">// Practica directamente con el módulo físico</div>
+      <div style="display:flex;flex-direction:column;gap:18px" id="circuitos-list"></div>
+    </div>
+
+    <!-- H: CÓDIGO -->
+    <div class="page" id="h-codigo" style="display:none">
+      <div class="ptitle">Repositorio de Código</div>
+      <div class="psub">// Sketches Arduino de referencia — listos para cargar al módulo</div>
+      <div class="ga" id="code-list"></div>
+    </div>
+
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+
+<!-- ============================================================
+     MODAL DE PRÁCTICA
+     ============================================================ -->
+<div class="overlay" id="prac-modal">
+  <div class="modal">
+    <div class="mhead">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span class="tag tc" id="m-num">—</span>
+          <span id="m-diff" style="color:var(--aw);font-size:13px"></span>
+        </div>
+        <div style="font-family:var(--head);font-weight:700;font-size:1.2rem" id="m-title">—</div>
+        <div style="color:var(--td);font-size:13px;margin-top:4px" id="m-obj">—</div>
+      </div>
+      <button class="mclose" onclick="closeModal()">✕ Cerrar</button>
+    </div>
+    <div class="mbody">
+      <div>
+        <h3>🔩 Checklist de Componentes</h3>
+        <div style="font-size:12px;color:var(--td);margin-bottom:8px;font-family:var(--mono)">Identifica cada pieza en el módulo antes de comenzar</div>
+        <div class="chk" id="m-checklist"></div>
+      </div>
+      <div>
+        <h3>⚡ Diagrama de Conexión</h3>
+        <div class="circuit" id="m-circuit"></div>
+      </div>
+      <div>
+        <h3>📋 Pasos</h3>
+        <div style="display:flex;flex-direction:column;gap:8px" id="m-steps"></div>
+      </div>
+      <div id="m-code-wrap">
+        <h3>💾 Código Arduino</h3>
+        <div id="m-code" style="background:#020912;border-radius:6px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.9;white-space:pre-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCRIPTS — orden: backend primero, luego UI
+     ============================================================ -->
+<script src="electro-lab-backend.js"></script>
+<script>
+// ============================================================
+// UI.JS — Lógica de navegación y render de interfaz
+// Todo lo que modifique datos usa ElectroLab (definido en backend.js)
+// ============================================================
+
+// ── Datos estáticos de la Biblioteca de Hardware ─────────────
+// (No cambian con el tiempo; son la documentación del módulo físico)
+
+const HW_COMPONENTS = [
+  { ico:'🔴', name:'LED Rojo 5mm',         desc:'Diodo emisor de luz. Vf≈1.8V, If=20mA. Usa R=220Ω con 5V.',                specs:'Vf=1.8V · If=20mA' },
+  { ico:'🟢', name:'LED Verde 5mm',        desc:'LED verde estándar. Más eficiente que el rojo. Vf≈2.1V.',                   specs:'Vf=2.1V · If=20mA' },
+  { ico:'🔵', name:'LED Azul 5mm',         desc:'LED azul de alto brillo. Requiere mayor voltaje umbral.',                   specs:'Vf=3.0V · If=20mA' },
+  { ico:'⚡', name:'Resistencia 220Ω',     desc:'Para proteger LEDs con 5V. Banda marrón-rojo-negro.',                       specs:'220Ω ±5% · ¼W' },
+  { ico:'🔧', name:'Resistencia 1kΩ',      desc:'Uso general: divisores de voltaje, pull-up/down.',                          specs:'1kΩ ±5% · ¼W' },
+  { ico:'🎚️', name:'Potenciómetro 10kΩ',   desc:'Control analógico. 3 terminales: Vcc, GND, Wiper (salida variable).',      specs:'10kΩ · Lineal B' },
+  { ico:'🔘', name:'Botón Pulsador',        desc:'Normalmente abierto (NO). Usar con resistencia pull-down 10kΩ.',            specs:'NO · 6×6mm' },
+  { ico:'🔊', name:'Buzzer Activo',         desc:'Genera tono fijo al aplicar 5V. No requiere señal PWM.',                   specs:'5V · 2.3kHz' },
+  { ico:'🌡️', name:'Sensor TMP36',          desc:'Salida analógica lineal. T(°C) = (Vout − 0.5) / 0.01',                    specs:'−40 a +125°C' },
+  { ico:'📟', name:'Display 7 Segmentos',   desc:'Cátodo común. 8 pines (a–g + dp). Resistencia en cada segmento.',          specs:'CC · 5V · Rojo' },
+];
+
+const HW_CIRCUITS = [
+  {
+    title:'Circuito 1 — LED con resistencia limitadora',
+    level:'⭐ Básica',
+    comps:['LED','Resistencia 220Ω','Fuente 5V'],
+    diagram:`[5V (Pin 5V)] ──[R 220Ω]──[LED+]──[LED−]──[GND]\n\nCálculo:\nR = (Vcc − Vled) / Iled\nR = (5 − 2.0) / 0.020 = 150Ω → usar 220Ω`,
+    desc:'El circuito más fundamental. Limita la corriente para no quemar el LED.',
+  },
+  {
+    title:'Circuito 2 — Divisor de voltaje',
+    level:'⭐ Básica',
+    comps:['R1=1kΩ','R2=2.2kΩ','Multímetro','Fuente 5V'],
+    diagram:`[5V]──[R1=1kΩ]──[Nodo A]──[R2=2.2kΩ]──[GND]\n              │\n         [Voltímetro]\n\nVout = Vcc × R2/(R1+R2) = 5 × 2200/3200 = 3.44V`,
+    desc:'Principio fundamental para sensores y referencias de voltaje.',
+  },
+  {
+    title:'Circuito 3 — LED controlado por Arduino',
+    level:'⭐⭐ Intermedia',
+    comps:['Arduino UNO','LED','Resistencia 220Ω','Jumpers'],
+    diagram:`[Pin13]──[R220]──[LED+]──[LED−]──[GND]\n\nvoid loop() {\n  digitalWrite(13, HIGH); delay(500);\n  digitalWrite(13, LOW);  delay(500);\n}`,
+    desc:'Control digital de actuadores desde microcontrolador.',
+  },
+  {
+    title:'Circuito 4 — Fading con PWM',
+    level:'⭐⭐ Intermedia',
+    comps:['Arduino UNO','LED azul','Resistencia 220Ω','Potenciómetro 10kΩ'],
+    diagram:`[A0] ← [POT wiper]\n[Pin9]──[R220]──[LED]──[GND]\n\nint v = analogRead(A0);   // 0–1023\nanalogWrite(9, v / 4);    // 0–255`,
+    desc:'Modulación PWM para control de brillo sin pérdida de energía.',
+  },
+  {
+    title:'Circuito 5 — Semáforo con 3 LEDs',
+    level:'⭐⭐ Intermedia',
+    comps:['Arduino UNO','LED rojo','LED amarillo','LED verde','3 × R220Ω'],
+    diagram:`[Pin2]──[R220]──[LED Rojo]──[GND]\n[Pin3]──[R220]──[LED Amarillo]──[GND]\n[Pin4]──[R220]──[LED Verde]──[GND]\n\nSecuencia: Verde → Amarillo → Rojo → Verde`,
+    desc:'Aplicación de secuencia temporal. Base de sistemas de control.',
+  },
+  {
+    title:'Circuito 6 — Sensor temperatura + alarma',
+    level:'⭐⭐⭐ Avanzada',
+    comps:['Arduino UNO','TMP36','Buzzer','LED rojo','R220Ω'],
+    diagram:`[TMP36 Vout] ── [A1]\n[Pin8] ── [BUZZER] ── [GND]\n[Pin7] ── [R220] ── [LED] ── [GND]\n\nT = (V − 0.5) × 100\nif(T > 35°C) → ALARMA`,
+    desc:'Sistema embebido de monitoreo con sensado analógico y salidas digitales.',
+  },
+];
+
+const HW_CODES = [
+  { title:'Blink básico',      code:`void setup(){pinMode(13,OUTPUT);}\nvoid loop(){digitalWrite(13,HIGH);delay(1000);digitalWrite(13,LOW);delay(1000);}` },
+  { title:'Lectura analógica', code:`void setup(){Serial.begin(9600);}\nvoid loop(){int v=analogRead(A0);Serial.println(v);delay(200);}` },
+  { title:'PWM con pot',       code:`void setup(){Serial.begin(9600);}\nvoid loop(){int p=analogRead(A0);int w=map(p,0,1023,0,255);analogWrite(9,w);Serial.println(w);delay(100);}` },
+  { title:'Sensor TMP36',      code:`void setup(){Serial.begin(9600);}\nvoid loop(){int r=analogRead(A1);float v=r*(5.0/1023.0);float t=(v-0.5)/0.01;Serial.println(t);delay(500);}` },
+  { title:'Buzzer alarma',     code:`void setup(){pinMode(8,OUTPUT);}\nvoid loop(){tone(8,2300,200);delay(500);}` },
+  { title:'Serie bidireccional',code:`void setup(){Serial.begin(9600);pinMode(13,OUTPUT);}\nvoid loop(){if(Serial.available()){char c=Serial.read();if(c=='1')digitalWrite(13,HIGH);if(c=='0')digitalWrite(13,LOW);}}` },
+];
+
+
+// ============================================================
+// PANEL SWITCHER
+// ============================================================
+
+function setPanel(panel, el) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+
+  const sidebars   = { student:'sidebar-student', teacher:'sidebar-teacher', hardware:'sidebar-hardware' };
+  const firstPages = { student:'s-dashboard',     teacher:'t-dashboard',     hardware:'h-modulo' };
+  const roles      = { student:'Alumno',           teacher:'Docente',         hardware:'Biblioteca' };
+  const avs        = { student:'JM',               teacher:'PG',              hardware:'🔧' };
+
+  Object.values(sidebars).forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById(sidebars[panel]).style.display = 'flex';
+  document.getElementById('role-label').textContent   = roles[panel];
+  document.getElementById('av-initials').textContent  = avs[panel];
+
+  // Cambiar usuario activo en el backend
+  const userKey = panel === 'teacher' ? 'teacher' : 'student';
+  ElectroLab.setUser(userKey);
+
+  // Mostrar la primera página del panel
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('on'); p.style.display = 'none'; });
+  const fp = document.getElementById(firstPages[panel]);
+  fp.classList.add('on'); fp.style.display = 'block';
+
+  document.querySelectorAll('#' + sidebars[panel] + ' .si').forEach(i => i.classList.remove('on'));
+  document.querySelector('#' + sidebars[panel] + ' .si')?.classList.add('on');
+
+  // Render de dashboard según panel
+  if (panel === 'student')  refreshStudentDashboard();
+  if (panel === 'teacher')  refreshTeacherDashboard();
+  if (panel === 'hardware') renderHardwarePages();
+}
+
+function showPage(id, el, sidebarId) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('on'); p.style.display = 'none'; });
+  const p = document.getElementById(id);
+  p.classList.add('on'); p.style.display = 'block';
+  if (sidebarId) {
+    document.querySelectorAll('#' + sidebarId + ' .si').forEach(i => i.classList.remove('on'));
+    if (el) el.classList.add('on');
+  }
+}
+
+
+// ============================================================
+// DASHBOARD ALUMNO
+// ============================================================
+
+function refreshStudentDashboard() {
+  const state      = ElectroLab.AppState;
+  const published  = state.getPublishedPractices();
+  const submissions = state.getStudentSubmissions(state.currentUser?.id || 'stu-001');
+  const submittedIds = new Set(submissions.map(s => s.practiceId));
+  const pending    = published.filter(p => !submittedIds.has(p.id));
+
+  // Subtitle
+  const user = state.currentUser;
+  document.getElementById('dash-subtitle').textContent =
+    `// Bienvenido, ${user?.name || 'Alumno'} — Electrotecnia IPN`;
+
+  // Stats
+  document.getElementById('dash-completed').textContent = submissions.length;
+  document.getElementById('dash-pending').textContent   = pending.length;
+  document.getElementById('dash-total').textContent     = published.length;
+
+  // Lista de prácticas disponibles
+  const dpl = document.getElementById('dash-prac-list');
+  if (published.length === 0) {
+    dpl.innerHTML = '<div class="empty"><div class="eico">📭</div><div class="etxt">El docente aún no ha publicado prácticas.</div></div>';
+  } else {
+    dpl.innerHTML = published.map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
+        <div>
+          <div style="font-weight:600">${p.num} — ${p.title}</div>
+          <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${'⭐'.repeat(p.difficulty)} · ${p.deliveryType === 'photo' ? '📷 Foto' : p.deliveryType === 'quiz' ? '📝 Quiz' : '📋 Ambos'}</div>
+        </div>
+        <span class="tag ${submittedIds.has(p.id) ? 'tg' : 'tw'}">${submittedIds.has(p.id) ? '✓ Entregada' : 'Pendiente'}</span>
+      </div>`).join('');
+  }
+
+  // Mis entregas
+  const ds = document.getElementById('dash-submissions');
+  if (submissions.length === 0) {
+    ds.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">No has entregado nada todavía.</div></div>';
+  } else {
+    ds.innerHTML = submissions.map(s => {
+      const prac = state.practices.find(p => p.id === s.practiceId);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
+          <div>
+            <div style="font-weight:600">${prac?.title || 'Práctica'}</div>
+            <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${ElectroLab.formatDate(s.submittedAt)}</div>
+          </div>
+          ${s.grade != null
+            ? `<span class="tag tg">${s.grade}/10</span>`
+            : '<span class="tag tw">Sin calificar</span>'}
+        </div>`;
+    }).join('');
+  }
+}
+
+
+// ============================================================
+// DASHBOARD DOCENTE
+// ============================================================
+
+function refreshTeacherDashboard() {
+  const state    = ElectroLab.AppState;
+  const pending  = state.getPendingGrading();
+  const published = state.getPublishedPractices();
+
+  document.getElementById('teacher-subtitle').textContent =
+    `// ${state.currentUser?.name || 'Docente'} — Electrotecnia IPN`;
+
+  document.getElementById('t-total-pracs').textContent   = state.practices.length;
+  document.getElementById('t-published').textContent     = published.length;
+  document.getElementById('t-pending-grade').textContent = pending.length;
+
+  // Entregas recientes
+  const tr = document.getElementById('t-recent-submissions');
+  const recent = [...state.submissions].sort((a,b) => b.submittedAt - a.submittedAt).slice(0, 5);
+  if (recent.length === 0) {
+    tr.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">Sin entregas todavía.</div></div>';
+  } else {
+    tr.innerHTML = recent.map(s => {
+      const prac = state.practices.find(p => p.id === s.practiceId);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
+          <div>
+            <div style="font-weight:600">${s.studentName}</div>
+            <div style="color:var(--td);font-size:11px">${prac?.num} ${prac?.title || ''}</div>
+          </div>
+          ${s.grade != null
+            ? `<span class="tag tg">${s.grade}/10</span>`
+            : '<span class="tag tw">Sin calificar</span>'}
+        </div>`;
+    }).join('');
+  }
+
+  // Estado del grupo
+  const tg = document.getElementById('t-group-status');
+  if (published.length === 0) {
+    tg.innerHTML = '<div class="empty"><div class="eico">👥</div><div class="etxt">Publica prácticas para ver el progreso.</div></div>';
+  } else {
+    tg.innerHTML = published.map(p => {
+      const count = state.submissions.filter(s => s.practiceId === p.id).length;
+      const total = state.students.length;
+      const pct   = total ? Math.round(count / total * 100) : 0;
+      return `
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span>${p.num} ${p.title.substring(0,30)}…</span>
+            <span style="font-family:var(--mono);color:var(--td)">${count}/${total}</span>
+          </div>
+          <div class="pw"><div class="pb" style="width:${pct}%"></div></div>
+        </div>`;
+    }).join('');
+  }
+
+  // Tabla de alumnos (usa renderStudentList del backend)
+  ElectroLab.renderStudentList();
+  ElectroLab.renderStudentCount();
+
+  // Actualizar contador de entregas totales
+  const tse = document.getElementById('t-total-submissions');
+  if (tse) tse.textContent = state._submissions.length;
+
+  // Selectores del foro y materiales
+  populateForumSelects();
+  populateMaterialSelects();
+  renderMaterialList();
+}
+
+
+// ============================================================
+// SELECTORES DEL FORO Y MATERIALES
+// ============================================================
+
+function populateForumSelects() {
+  const state    = ElectroLab.AppState;
+  const stuSel   = document.getElementById('foro-student');
+  const pracSel  = document.getElementById('foro-practice');
+  if (stuSel)  stuSel.innerHTML  = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if (pracSel) pracSel.innerHTML = '<option value="">— Selecciona —</option>' +
+    state.getPublishedPractices().map(p => `<option value="${p.id}">${p.num} — ${p.title}</option>`).join('');
+}
+
+function populateMaterialSelects() {
+  const sel = document.getElementById('mat-practice');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— General —</option>' +
+    ElectroLab.AppState.getPublishedPractices()
+      .map(p => `<option value="${p.id}">${p.num} — ${p.title}</option>`).join('');
+}
+
+
+// ============================================================
+// MATERIALES DEL REPOSITORIO
+// ============================================================
+
+let _pendingMaterialFile = null; // FileRecord temporal antes de guardar
+
+async function handleMaterialUpload(event) {
+  await ElectroLab.handleFileInput(event, (record) => {
+    _pendingMaterialFile = record;
+  }, 'material');
+}
+
+function saveMaterial() {
+  if (!_pendingMaterialFile) {
+    ElectroLab.notify('Primero selecciona un archivo.', 'error');
+    return;
+  }
+  const title    = document.getElementById('mat-title')?.value?.trim() || _pendingMaterialFile.name;
+  const category = document.getElementById('mat-category')?.value || 'pdf';
+  const practiceId = document.getElementById('mat-practice')?.value || null;
+
+  ElectroLab.AppState.addMaterial(_pendingMaterialFile, { category, practiceId });
+  _pendingMaterialFile = null;
+
+  // Limpiar form
+  if (document.getElementById('mat-title')) document.getElementById('mat-title').value = '';
+  resetDropZoneById('mat-drop');
+  renderMaterialList();
+  renderLabMaterials();
+}
+
+function resetDropZoneById(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `
+    <input type="file" id="mat-file-input"
+           accept=".pdf,.ino,image/jpeg,image/png,video/mp4,video/quicktime"
+           onchange="handleMaterialUpload(event)">
+    <div style="font-size:32px;margin-bottom:8px">📤</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--td)">Arrastra el archivo aquí</div>
+    <div style="font-size:11px;color:var(--tf);margin-top:4px">PDF · .ino · PNG · JPG · MP4 · máx. 50 MB</div>`;
+}
+
+function renderMaterialList() {
+  const el = document.getElementById('mat-list');
+  if (!el) return;
+  const mats = ElectroLab.AppState.materials;
+  if (mats.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="eico">📂</div><div class="etxt">Sin materiales subidos todavía.</div></div>';
+    return;
+  }
+  el.innerHTML = mats.map(m => {
+    const icons = { pdf:'📄', video:'🎥', code:'💾', image:'🖼️', other:'📁' };
+    return `
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--b)">
+        <span style="font-size:18px">${icons[m.category] || '📁'}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</span>
+        <span class="tag tb">${m.ext.toUpperCase()}</span>
+        <button class="btn bg btn-sm"
+          onclick="ElectroLab.AppState.materials.splice(ElectroLab.AppState.materials.findIndex(x=>x.id==='${m.id}'),1);renderMaterialList()">✕</button>
+      </div>`;
+  }).join('');
+}
+
+/** Renderiza los materiales del docente en el Lab Virtual del alumno */
+function renderLabMaterials() {
+  const el = document.getElementById('lab-materials');
+  if (!el) return;
+  const mats = ElectroLab.AppState.materials;
+  if (mats.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="eico">📂</div><div class="etxt">El docente aún no ha subido materiales.</div></div>';
+    return;
+  }
+  const icons = { pdf:'📄', video:'🎥', code:'💾', image:'🖼️', other:'📁' };
+  el.innerHTML = mats.map(m => `
+    <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer"
+         onclick="downloadMaterial('${m.id}')">
+      <div style="font-size:32px;flex-shrink:0">${icons[m.category] || '📁'}</div>
+      <div style="flex:1">
+        <div class="card-t">${m.name}</div>
+        <div style="color:var(--td);font-size:12px;margin-top:3px">${ElectroLab.formatDate(m.uploadedAt)}</div>
+      </div>
+      <span class="tag tb">${m.ext.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+/** Descarga un material guardado como base64 */
+function downloadMaterial(matId) {
+  const m = ElectroLab.AppState.materials.find(x => x.id === matId);
+  if (!m) return;
+  const a = document.createElement('a');
+  a.href     = m.dataUrl;
+  a.download = m.name;
+  a.click();
+}
+
+
+// ============================================================
+// ARCHIVOS EN EL EDITOR
+// ============================================================
+
+const _editorFiles = []; // FileRecords adjuntos a la práctica en curso
+
+async function handleEditorFiles(event) {
+  const files = [...(event.target.files || [])];
+  for (const file of files) {
+    try {
+      const record = await ElectroLab.validateAndReadFile(file, 'material');
+      _editorFiles.push(record);
+      renderEditorFileList();
+    } catch (_) { /* validación ya notificada */ }
+  }
+}
+
+function renderEditorFileList() {
+  const el = document.getElementById('editor-file-list');
+  if (!el) return;
+  el.innerHTML = _editorFiles.map((f, i) => `
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--b)">
+      <span>📎</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${f.name}</span>
+      <span style="font-family:var(--mono);color:var(--tf)">${ElectroLab.formatBytes(f.sizeBytes)}</span>
+      <button class="btn bg btn-sm" onclick="_editorFiles.splice(${i},1);renderEditorFileList()">✕</button>
+    </div>`).join('');
+}
+
+
+// ============================================================
+// EDITOR — HELPERS
+// ============================================================
+
+let _stepCount = 1;
+
+function addStep() {
+  _stepCount++;
+  const container = document.getElementById('ed-steps');
+  const row = document.createElement('div');
+  row.className = 'step-row';
+  row.style.cssText = 'display:flex;gap:8px;align-items:flex-start';
+  row.innerHTML = `
+    <span class="tag tc" style="flex-shrink:0;margin-top:8px">${String(_stepCount).padStart(2,'0')}</span>
+    <textarea placeholder="Paso ${_stepCount}…" style="flex:1;min-height:56px"></textarea>
+    <button class="btn bg btn-sm" style="margin-top:8px" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(row);
+}
+
+function addCustomComponent() {
+  const name = prompt('Nombre del componente:');
+  if (!name?.trim()) return;
+  const list = document.getElementById('ed-comp-list');
+  const row  = document.createElement('div');
+  row.className = 'chi';
+  row.innerHTML = `<input type="checkbox" checked><span>${name.trim()}</span>`;
+  list.appendChild(row);
+}
+
+
+// ============================================================
+// MODAL DE PRÁCTICA
+// ============================================================
+
+function openPrac(id) {
+  const p = ElectroLab.AppState.practices.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('m-num').textContent   = p.num;
+  document.getElementById('m-title').textContent = p.title;
+  document.getElementById('m-obj').textContent   = p.objective;
+  document.getElementById('m-diff').textContent  = '⭐'.repeat(p.difficulty) + '☆'.repeat(3 - p.difficulty);
+
+  document.getElementById('m-checklist').innerHTML = (p.components || []).map(c =>
+    `<div class="chi"><input type="checkbox"><span>${c}</span></div>`).join('') ||
+    '<div style="color:var(--tf);font-size:13px">Sin componentes definidos.</div>';
+
+  document.getElementById('m-circuit').textContent = p.circuitDiagram || '— Sin diagrama —';
+
+  document.getElementById('m-steps').innerHTML = (p.steps || []).map((s, i) => `
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <span class="tag tc" style="flex-shrink:0">${String(i+1).padStart(2,'0')}</span>
+      <div style="font-size:13px;line-height:1.5;padding-top:2px">${s}</div>
+    </div>`).join('') || '<div style="color:var(--tf);font-size:13px">Sin pasos definidos.</div>';
+
+  const codeEl = document.getElementById('m-code');
+  const codeWrap = document.getElementById('m-code-wrap');
+  if (p.codeSnippet) {
+    codeEl.textContent  = p.codeSnippet;
+    codeWrap.style.display = 'block';
+  } else {
+    codeWrap.style.display = 'none';
+  }
+
+  document.getElementById('prac-modal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('prac-modal').classList.remove('on');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('prac-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('prac-modal')) closeModal();
+});
+
+
+// ============================================================
+// HARDWARE PAGES — RENDER ESTÁTICO
+// ============================================================
+
+function renderHardwarePages() {
+  // Componentes
+  const hcl = document.getElementById('hw-comp-list');
+  if (hcl) hcl.innerHTML = HW_COMPONENTS.map(c => `
+    <div class="comp">
+      <div class="comp-img">${c.ico}</div>
+      <div class="comp-info">
+        <div class="comp-name">${c.name}</div>
+        <div style="font-size:12px;color:var(--td);line-height:1.5;margin-bottom:8px">${c.desc}</div>
+        <span class="tag tc">${c.specs}</span>
+      </div>
+    </div>`).join('');
+
+  // Circuitos
+  const cl = document.getElementById('circuitos-list');
+  if (cl) cl.innerHTML = HW_CIRCUITS.map(c => `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="card-t">${c.title}</div>
+        <span class="tag tw">${c.level}</span>
+      </div>
+      <div style="color:var(--td);font-size:13px;margin-bottom:12px">${c.desc}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${c.comps.map(x => `<span class="tag tb">${x}</span>`).join('')}</div>
+      <div class="circuit">${c.diagram}</div>
+    </div>`).join('');
+
+  // Código
+  const cdl = document.getElementById('code-list');
+  if (cdl) cdl.innerHTML = HW_CODES.map(c => `
+    <div class="card">
+      <div class="card-t" style="margin-bottom:10px">${c.title}</div>
+      <div style="background:#020912;border-radius:6px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--a2);white-space:pre-wrap">${c.code}</div>
+    </div>`).join('');
+
+  // Componentes (página del alumno también)
+  const cc = document.getElementById('comp-cards');
+  if (cc) cc.innerHTML = HW_COMPONENTS.map(c => `
+    <div class="comp">
+      <div class="comp-img">${c.ico}</div>
+      <div class="comp-info">
+        <div class="comp-name">${c.name}</div>
+        <div style="font-size:12px;color:var(--td);line-height:1.5;margin-bottom:8px">${c.desc}</div>
+        <span class="tag tc">${c.specs}</span>
+      </div>
+    </div>`).join('');
+}
+
+
+// ============================================================
+// PRÁCTICA CARD HTML (alumno)
+// ============================================================
+
+function buildPracticeCardHTML(p) {
+  const state = ElectroLab.AppState;
+  const subs  = state.getStudentSubmissions(state.currentUser?.id || 'stu-001');
+  const submitted = subs.some(s => s.practiceId === p.id);
+  const stars = '⭐'.repeat(p.difficulty) + '☆'.repeat(3 - p.difficulty);
+  const statusTag = submitted
+    ? '<span class="tag tg">✓ Entregada</span>'
+    : '<span class="tag tw">Pendiente</span>';
+
+  return `
+    <div class="pcard" onclick="openPrac('${p.id}')">
+      <div class="pch">
+        <span class="pnum">${p.num}</span>
+        <div class="pt">${p.title}</div>
+      </div>
+      <div class="pb2">${p.objective?.substring(0, 100) || ''}${p.objective?.length > 100 ? '…' : ''}</div>
+      <div class="pf">
+        <span style="color:var(--aw);font-size:12px">${stars}</span>
+        ${statusTag}
+      </div>
+    </div>`;
+}
+
+
+// ============================================================
+// OVERRIDES DE FUNCIONES DEL BACKEND (para UI)
+// Las funciones del backend llaman a estas al hacer render
+// ============================================================
+
+// Sobrescribir renderStudentPractices del backend para usar buildPracticeCardHTML
+const _origRenderStudentPractices = ElectroLab.renderStudentPractices;
+ElectroLab.renderStudentPractices = function() {
+  const container = document.getElementById('prac-list');
+  if (!container) return;
+  const published = ElectroLab.AppState.getPublishedPractices();
+  if (published.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="eico">📭</div><div class="etxt">Aún no hay prácticas publicadas.</div><div class="esub">Tu maestro las irá subiendo.</div></div>';
+  } else {
+    container.innerHTML = published.map(p => buildPracticeCardHTML(p)).join('');
+  }
+};
+
+
+// ============================================================
+// INIT
+// ============================================================
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderHardwarePages();
+  refreshStudentDashboard();
+  // Cargar componentes en la página del alumno también
+  const cc = document.getElementById('comp-cards');
+  if (cc && cc.children.length === 0) {
+    cc.innerHTML = HW_COMPONENTS.map(c => `
+      <div class="comp">
+        <div class="comp-img">${c.ico}</div>
+        <div class="comp-info">
+          <div class="comp-name">${c.name}</div>
+          <div style="font-size:12px;color:var(--td);line-height:1.5;margin-bottom:8px">${c.desc}</div>
+          <span class="tag tc">${c.specs}</span>
+        </div>
+      </div>`).join('');
+  }
+});
+</script>
+</body>
+</html>
