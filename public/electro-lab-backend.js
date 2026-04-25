@@ -1,42 +1,7 @@
-// ============================================================
-// public/electro-lab-backend.js — Lógica del Frontend
-// ============================================================
-//
-// Este archivo corre en el NAVEGADOR.
-// Toda operación de datos llama al servidor Node con fetch().
-// No hay arrays en memoria — la fuente de verdad es el servidor.
-//
-// ESTRUCTURA:
-//   §1  CONFIG
-//   §2  API CLIENT        — funciones fetch a la API de Node
-//   §3  ROLES Y PERMISOS
-//   §4  APP STATE         — solo el usuario activo (sin datos locales)
-//   §5  PRÁCTICAS
-//   §6  ALUMNOS
-//   §7  ENTREGAS
-//   §8  CALIFICACIONES
-//   §9  MATERIALES
-//   §10 VALIDACIÓN DE ARCHIVOS (en el cliente, antes de subir)
-//   §11 CUESTIONARIOS
-//   §12 RENDER DE LISTAS
-//   §13 EDITOR (docente)
-//   §14 NOTIFICACIONES
-//   §15 UTILIDADES
-//   §16 API PÚBLICA — window.ElectroLab
-//
-// ============================================================
-
 'use strict';
 
-
-// ============================================================
-// §1  CONFIG
-// ============================================================
-
 const CONFIG = {
-  // URL base de la API — si el frontend y el servidor corren
-  // en el mismo origen (localhost:3000) puedes usar '/api'.
-  // Si están separados, pon la URL completa del servidor.
+
   API_BASE: '/api',
 
   MAX_FILE_SIZE_MB:  50,
@@ -66,21 +31,6 @@ const CONFIG = {
   ],
 };
 
-
-// ============================================================
-// §2  API CLIENT — todas las llamadas al servidor Node
-// ============================================================
-//
-// Estas funciones son el puente entre el navegador y el servidor.
-// Si cambias el servidor (diferente URL, autenticación, etc.)
-// solo modificas este bloque.
-//
-// getToken() devuelve el JWT guardado en localStorage.
-// Cuando implementes login real, el token se guarda aquí
-// al hacer POST /api/auth/login.
-//
-// ============================================================
-
 function getToken() {
   return localStorage.getItem('electro_token') || '';
 }
@@ -93,13 +43,6 @@ function clearToken() {
   localStorage.removeItem('electro_token');
 }
 
-/**
- * Wrapper de fetch que agrega Content-Type y Authorization.
- * Lanza un Error con el mensaje del servidor si la respuesta no es 2xx.
- *
- * @param {string} path   — ruta relativa a CONFIG.API_BASE, ej: '/practicas'
- * @param {object} opts   — opciones de fetch (method, body, etc.)
- */
 async function apiFetch(path, opts = {}) {
   const url = CONFIG.API_BASE + path;
 
@@ -108,7 +51,6 @@ async function apiFetch(path, opts = {}) {
     ...opts.headers,
   };
 
-  // Solo agregar Content-Type si el body es JSON (no FormData)
   if (opts.body && !(opts.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
@@ -123,8 +65,6 @@ async function apiFetch(path, opts = {}) {
   return res.json();
 }
 
-// ── Auth ───────────────────────────────────────────────────────
-
 const API = {
   auth: {
     login: (email, password) =>
@@ -135,7 +75,6 @@ const API = {
     me: () => apiFetch('/auth/me'),
   },
 
-  // ── Prácticas ──────────────────────────────────────────────
   practicas: {
     getAll: (role = 'student') =>
       apiFetch(`/practicas?role=${role}`),
@@ -162,7 +101,6 @@ const API = {
     unpublish: (id) => apiFetch(`/practicas/${id}`, { method:'PATCH', body: JSON.stringify({ status:'draft' }) }),
   },
 
-  // ── Alumnos ────────────────────────────────────────────────
   alumnos: {
     getAll: () =>
       apiFetch('/alumnos'),
@@ -186,7 +124,6 @@ const API = {
       apiFetch(`/alumnos/${id}`, { method: 'DELETE' }),
   },
 
-  // ── Entregas ───────────────────────────────────────────────
   entregas: {
     getAll: (filters = {}) => {
       const params = new URLSearchParams(filters);
@@ -206,12 +143,10 @@ const API = {
       }),
   },
 
-  // ── Materiales ─────────────────────────────────────────────
   materiales: {
     getAll: () =>
       apiFetch('/materiales'),
 
-    // Sube el archivo con FormData (multipart), no base64
     create: (file, { name, category, practiceId, uploadedBy }) => {
       const form = new FormData();
       form.append('file',       file);
@@ -226,11 +161,6 @@ const API = {
       apiFetch(`/materiales/${id}`, { method: 'DELETE' }),
   },
 };
-
-
-// ============================================================
-// §3  ROLES Y PERMISOS
-// ============================================================
 
 const ROLES = {
   STUDENT: 'student',
@@ -277,22 +207,9 @@ function requirePermission(action) {
   }
 }
 
-
-// ============================================================
-// §4  APP STATE
-// ============================================================
-//
-// AppState ya no guarda arrays de datos en memoria.
-// Solo guarda el usuario activo y un caché ligero para
-// no hacer fetch en cada render menor.
-// Los datos reales viven en el servidor.
-//
-// ─────────────────────────────────────────────────────────────
-
 const AppState = {
   currentUser: null,
 
-  // Caché ligero — se invalida al crear/modificar/borrar datos
   _cache: {
     practicas:  null,
     alumnos:    null,
@@ -300,7 +217,6 @@ const AppState = {
     materiales: null,
   },
 
-  // Invalida el caché de una colección para forzar re-fetch
   invalidate(collection) {
     if (collection) this._cache[collection] = null;
     else Object.keys(this._cache).forEach(k => this._cache[k] = null);
@@ -313,8 +229,6 @@ const AppState = {
     if (avEl) avEl.textContent = user?.initials || user?.name?.[0] || '?';
     if (rlEl) rlEl.textContent = user?.name     || '—';
   },
-
-  // ── Getters con caché ───────────────────────────────────
 
   async getPracticas() {
     if (!this._cache.practicas) {
@@ -337,7 +251,7 @@ const AppState = {
   },
 
   async getEntregas(filters = {}) {
-    // Las entregas no se cachean porque cambian frecuentemente
+
     return API.entregas.getAll(filters);
   },
 
@@ -357,11 +271,6 @@ const AppState = {
     return this._cache.materiales;
   },
 };
-
-
-// ============================================================
-// §5  PRÁCTICAS
-// ============================================================
 
 async function addPractice(data) {
   requirePermission('canCreatePractice');
@@ -406,11 +315,6 @@ async function deletePractice(id) {
   AppState.invalidate('practicas');
   notify('Práctica eliminada.', 'info');
 }
-
-
-// ============================================================
-// §6  ALUMNOS
-// ============================================================
 
 async function enrollStudent(data) {
   requirePermission('canEnrollStudents');
@@ -459,15 +363,10 @@ async function submitEnrollForm() {
     await renderStudentList();
     renderStudentCount();
   } catch (err) {
-    // El mensaje ya fue notificado dentro de enrollStudent o apiFetch
+
     console.warn('[ElectroLab] Enroll error:', err.message);
   }
 }
-
-
-// ============================================================
-// §7  ENTREGAS
-// ============================================================
 
 async function submitWork(data) {
   requirePermission('canSubmitWork');
@@ -497,11 +396,6 @@ async function submitWork(data) {
   notify(msg, 'success');
   return entrega;
 }
-
-
-// ============================================================
-// §8  CALIFICACIONES
-// ============================================================
 
 async function gradeSubmissionAction(submissionId, grade, feedback) {
   requirePermission('canGrade');
@@ -537,12 +431,6 @@ function selectSubmission(submissionId) {
   notify('Entrega seleccionada. Escribe la calificación y envía.', 'info');
 }
 
-
-// ============================================================
-// §9  MATERIALES
-// ============================================================
-
-// Archivo pendiente de subir (seleccionado pero aún no enviado)
 let _pendingMaterialFile = null;
 
 async function addMaterial(file, meta) {
@@ -563,26 +451,6 @@ async function deleteMaterial(id) {
   notify('Material eliminado.', 'info');
 }
 
-
-// ============================================================
-// §10  VALIDACIÓN DE ARCHIVOS (en el cliente)
-// ============================================================
-//
-// Esta validación ocurre ANTES de subir el archivo al servidor.
-// Es una primera línea de defensa en el navegador.
-// El servidor también valida (multer) — ambas capas son necesarias.
-//
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Valida un File del input (tipo, extensión, tamaño).
- * NO lo convierte a base64 — solo lo valida.
- * El archivo se sube con FormData directamente.
- *
- * @param {File} file
- * @param {'material'|'photo'} context
- * @returns {boolean}  true si es válido
- */
 function validateFile(file, context = 'material') {
   const nameLower = file.name.toLowerCase();
   const ext       = '.' + nameLower.split('.').pop();
@@ -625,7 +493,7 @@ async function handlePhotoUpload(event, practiceId) {
   if (dz) setDropZoneLoading(dz, file.name);
 
   try {
-    // 1. Subir el archivo al servidor y obtener la URL
+
     const saved = await API.materiales.create(file, {
       name:       file.name,
       category:   'image',
@@ -635,10 +503,8 @@ async function handlePhotoUpload(event, practiceId) {
 
     if (dz) setDropZoneSuccess(dz, file.name, file.size);
 
-    // 2. Registrar la entrega con la URL del archivo
     await submitWork({ practiceId, type: 'photo', fileUrl: saved.fileUrl });
 
-    // 3. Marcar tarjeta como entregada
     setTimeout(() => {
       const card = document.getElementById(`task-card-${practiceId}`);
       if (card) {
@@ -693,7 +559,6 @@ async function handleEditorFiles(event) {
   }
 }
 
-// Helpers visuales del drop zone
 function setDropZoneLoading(el, name) {
   el.innerHTML = `<div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-family:var(--mono);font-size:12px;color:var(--td)">Subiendo ${name}…</div>`;
 }
@@ -715,11 +580,6 @@ function resetDropZoneById(id) {
   const el = document.getElementById(id);
   if (el) resetDropZoneEl(el);
 }
-
-
-// ============================================================
-// §11  CUESTIONARIOS
-// ============================================================
 
 function gradeQuiz(questions, answers) {
   return questions.reduce((sc, q, i) => sc + (answers[i] === q.ans ? 1 : 0), 0);
@@ -784,11 +644,6 @@ function resetQuizInModal(practiceId) {
   document.querySelectorAll(`#quiz-${practiceId} .qfb`).forEach(f => { f.className=''; f.textContent=''; });
   document.querySelectorAll(`#quiz-${practiceId} input[type=radio]`).forEach(r => r.checked=false);
 }
-
-
-// ============================================================
-// §12  RENDER DE LISTAS
-// ============================================================
 
 async function renderStudentPractices() {
   const el = document.getElementById('prac-list');
@@ -1034,11 +889,6 @@ async function renderMaterialList() {
   }
 }
 
-
-// ============================================================
-// §13  EDITOR (docente)
-// ============================================================
-
 let _stepCount     = 1;
 const _editorFiles = [];   // File objects — se suben con FormData al guardar
 
@@ -1061,7 +911,6 @@ async function saveFromEditor(publish = false) {
 
   const practice = await addPractice(data);
 
-  // Subir archivos adjuntos si hay
   for (const file of _editorFiles) {
     await API.materiales.create(file, {
       name:       file.name,
@@ -1144,11 +993,6 @@ async function populateMaterialSelects() {
   } catch (_) {}
 }
 
-
-// ============================================================
-// §14  NOTIFICACIONES
-// ============================================================
-
 function notify(message, type = 'info', duration = 4000) {
   const colors = { success:'var(--a3)', error:'var(--ar)', info:'var(--ag)', warn:'var(--aw)' };
   const icons  = { success:'✓', error:'✕', info:'ℹ', warn:'⚠' };
@@ -1169,11 +1013,6 @@ function notify(message, type = 'info', duration = 4000) {
   }
 }
 
-
-// ============================================================
-// §15  UTILIDADES
-// ============================================================
-
 function formatBytes(b) {
   if (b<1024)    return `${b} B`;
   if (b<1048576) return `${(b/1024).toFixed(1)} KB`;
@@ -1189,39 +1028,26 @@ function generateId(prefix='id') {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
 }
 
-
-// ============================================================
-// §16  API PÚBLICA
-// ============================================================
-
 window.ElectroLab = {
   AppState, CONFIG, API,
 
-  // Auth
   setUser: u => AppState.setUser(u),
   currentUser: () => AppState.currentUser,
   can,
   saveToken, clearToken,
 
-  // Prácticas
   addPractice, publishPractice, unpublishPractice, deletePractice, saveFromEditor,
 
-  // Alumnos
   enrollStudent, removeStudent, updateStudent, submitEnrollForm,
 
-  // Entregas
   submitWork, gradeSubmissionAction, submitGradeFromForum, selectSubmission,
 
-  // Materiales
   addMaterial, deleteMaterial, saveMaterial, handleMaterialUpload,
 
-  // Archivos
   validateFile, handlePhotoUpload, handleEditorFiles, renderEditorFileList,
 
-  // Quiz
   buildQuizHTML, selectQuizOpt, submitQuizFromModal, resetQuizInModal,
 
-  // Render
   renderStudentPractices, buildPracticeCardHTML,
   renderTeacherPractices,
   renderStudentTasks,
@@ -1230,23 +1056,13 @@ window.ElectroLab = {
   renderLabMaterials, renderMaterialList,
   populateForumSelects, populateMaterialSelects,
 
-  // Editor
   addStep, addCustomComponent, clearEditor,
 
-  // Utils
   notify, formatBytes, formatDate, generateId,
 };
 
-
-// ============================================================
-// ARRANQUE
-// ============================================================
-
 document.addEventListener('DOMContentLoaded', async () => {
-  // Demo: usar alumno por defecto hasta que implementes login
-  // Cuando tengas login, reemplaza esto con:
-  //   const user = await API.auth.me();
-  //   AppState.setUser(user);
+
   AppState.setUser({
     id:       'stu-demo',
     name:     'Juan Méndez',
@@ -1255,7 +1071,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     group:    'G2',
   });
 
-  // Render inicial (los datos vienen del servidor)
   await Promise.all([
     renderStudentPractices(),
     renderStudentTasks(),
