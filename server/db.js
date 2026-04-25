@@ -174,24 +174,32 @@ const DB = {
   },
 
   createEntrega: async (data) => {
-    const { rows } = await pool.query(
-      `INSERT INTO entregas
-       (practice_id, student_id, student_name, type,
-        file_url, quiz_answers, quiz_score)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING *`,
-      [
-        data.practiceId,
-        data.studentId,
-        data.studentName,
-        data.type,
-        data.fileUrl || null,
-        data.quizAnswers ? JSON.stringify(data.quizAnswers) : null,
-        data.quizScore ?? null,
-      ]
-    );
-    return rows[0];
-  },
+  const isUuid = (value) =>
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+  const practiceId = isUuid(data.practiceId) ? data.practiceId : null;
+  const studentId  = isUuid(data.studentId) ? data.studentId : null;
+
+  const { rows } = await pool.query(
+    `INSERT INTO entregas
+     (practice_id, student_id, student_name, type,
+      file_url, quiz_answers, quiz_score)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)
+     RETURNING *`,
+    [
+      practiceId,
+      studentId,
+      data.studentName || '',
+      data.type,
+      data.fileUrl || null,
+      data.quizAnswers ? JSON.stringify(data.quizAnswers) : null,
+      data.quizScore ?? null,
+    ]
+  );
+
+  return rows[0];
+},
 
   calificarEntrega: async (id, { grade, feedback }) => {
     const { rows } = await pool.query(
