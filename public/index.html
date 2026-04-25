@@ -889,18 +889,8 @@ select option { background: var(--bg3); }
 </div>
 
 
-<!-- ============================================================
-     SCRIPTS — orden: backend primero, luego UI
-     ============================================================ -->
 <script src="electro-lab-backend.js"></script>
 <script>
-// ============================================================
-// UI.JS — Lógica de navegación y render de interfaz
-// Todo lo que modifique datos usa ElectroLab (definido en backend.js)
-// ============================================================
-
-// ── Datos estáticos de la Biblioteca de Hardware ─────────────
-// (No cambian con el tiempo; son la documentación del módulo físico)
 
 const HW_COMPONENTS = [
   { ico:'🔴', name:'LED Rojo 5mm',         desc:'Diodo emisor de luz. Vf≈1.8V, If=20mA. Usa R=220Ω con 5V.',                specs:'Vf=1.8V · If=20mA' },
@@ -908,10 +898,10 @@ const HW_COMPONENTS = [
   { ico:'🔵', name:'LED Azul 5mm',         desc:'LED azul de alto brillo. Requiere mayor voltaje umbral.',                   specs:'Vf=3.0V · If=20mA' },
   { ico:'⚡', name:'Resistencia 220Ω',     desc:'Para proteger LEDs con 5V. Banda marrón-rojo-negro.',                       specs:'220Ω ±5% · ¼W' },
   { ico:'🔧', name:'Resistencia 1kΩ',      desc:'Uso general: divisores de voltaje, pull-up/down.',                          specs:'1kΩ ±5% · ¼W' },
-  { ico:'🎚️', name:'Potenciómetro 10kΩ',   desc:'Control analógico. 3 terminales: Vcc, GND, Wiper (salida variable).',      specs:'10kΩ · Lineal B' },
+  { ico:'🎚️', name:'Potenciómetro 10kΩ',  desc:'Control analógico. 3 terminales: Vcc, GND, Wiper (salida variable).',      specs:'10kΩ · Lineal B' },
   { ico:'🔘', name:'Botón Pulsador',        desc:'Normalmente abierto (NO). Usar con resistencia pull-down 10kΩ.',            specs:'NO · 6×6mm' },
   { ico:'🔊', name:'Buzzer Activo',         desc:'Genera tono fijo al aplicar 5V. No requiere señal PWM.',                   specs:'5V · 2.3kHz' },
-  { ico:'🌡️', name:'Sensor TMP36',          desc:'Salida analógica lineal. T(°C) = (Vout − 0.5) / 0.01',                    specs:'−40 a +125°C' },
+  { ico:'🌡️', name:'Sensor TMP36',         desc:'Salida analógica lineal. T(°C) = (Vout − 0.5) / 0.01',                    specs:'−40 a +125°C' },
   { ico:'📟', name:'Display 7 Segmentos',   desc:'Cátodo común. 8 pines (a–g + dp). Resistencia en cada segmento.',          specs:'CC · 5V · Rojo' },
 ];
 
@@ -961,18 +951,14 @@ const HW_CIRCUITS = [
 ];
 
 const HW_CODES = [
-  { title:'Blink básico',      code:`void setup(){pinMode(13,OUTPUT);}\nvoid loop(){digitalWrite(13,HIGH);delay(1000);digitalWrite(13,LOW);delay(1000);}` },
-  { title:'Lectura analógica', code:`void setup(){Serial.begin(9600);}\nvoid loop(){int v=analogRead(A0);Serial.println(v);delay(200);}` },
-  { title:'PWM con pot',       code:`void setup(){Serial.begin(9600);}\nvoid loop(){int p=analogRead(A0);int w=map(p,0,1023,0,255);analogWrite(9,w);Serial.println(w);delay(100);}` },
-  { title:'Sensor TMP36',      code:`void setup(){Serial.begin(9600);}\nvoid loop(){int r=analogRead(A1);float v=r*(5.0/1023.0);float t=(v-0.5)/0.01;Serial.println(t);delay(500);}` },
-  { title:'Buzzer alarma',     code:`void setup(){pinMode(8,OUTPUT);}\nvoid loop(){tone(8,2300,200);delay(500);}` },
+  { title:'Blink básico',       code:`void setup(){pinMode(13,OUTPUT);}\nvoid loop(){digitalWrite(13,HIGH);delay(1000);digitalWrite(13,LOW);delay(1000);}` },
+  { title:'Lectura analógica',  code:`void setup(){Serial.begin(9600);}\nvoid loop(){int v=analogRead(A0);Serial.println(v);delay(200);}` },
+  { title:'PWM con pot',        code:`void setup(){Serial.begin(9600);}\nvoid loop(){int p=analogRead(A0);int w=map(p,0,1023,0,255);analogWrite(9,w);Serial.println(w);delay(100);}` },
+  { title:'Sensor TMP36',       code:`void setup(){Serial.begin(9600);}\nvoid loop(){int r=analogRead(A1);float v=r*(5.0/1023.0);float t=(v-0.5)/0.01;Serial.println(t);delay(500);}` },
+  { title:'Buzzer alarma',      code:`void setup(){pinMode(8,OUTPUT);}\nvoid loop(){tone(8,2300,200);delay(500);}` },
   { title:'Serie bidireccional',code:`void setup(){Serial.begin(9600);pinMode(13,OUTPUT);}\nvoid loop(){if(Serial.available()){char c=Serial.read();if(c=='1')digitalWrite(13,HIGH);if(c=='0')digitalWrite(13,LOW);}}` },
 ];
 
-
-// ============================================================
-// PANEL SWITCHER
-// ============================================================
 
 function setPanel(panel, el) {
   document.querySelectorAll('.ptab').forEach(t => t.classList.remove('on'));
@@ -987,14 +973,12 @@ function setPanel(panel, el) {
     document.getElementById(id).style.display = 'none';
   });
   document.getElementById(sidebars[panel]).style.display = 'flex';
-  document.getElementById('role-label').textContent   = roles[panel];
-  document.getElementById('av-initials').textContent  = avs[panel];
+  document.getElementById('role-label').textContent  = roles[panel];
+  document.getElementById('av-initials').textContent = avs[panel];
 
-  // Cambiar usuario activo en el backend
   const userKey = panel === 'teacher' ? 'teacher' : 'student';
   ElectroLab.setUser(userKey);
 
-  // Mostrar la primera página del panel
   document.querySelectorAll('.page').forEach(p => { p.classList.remove('on'); p.style.display = 'none'; });
   const fp = document.getElementById(firstPages[panel]);
   fp.classList.add('on'); fp.style.display = 'block';
@@ -1002,7 +986,6 @@ function setPanel(panel, el) {
   document.querySelectorAll('#' + sidebars[panel] + ' .si').forEach(i => i.classList.remove('on'));
   document.querySelector('#' + sidebars[panel] + ' .si')?.classList.add('on');
 
-  // Render de dashboard según panel
   if (panel === 'student')  refreshStudentDashboard();
   if (panel === 'teacher')  refreshTeacherDashboard();
   if (panel === 'hardware') renderHardwarePages();
@@ -1019,351 +1002,198 @@ function showPage(id, el, sidebarId) {
 }
 
 
-// ============================================================
-// DASHBOARD ALUMNO
-// ============================================================
+async function refreshStudentDashboard() {
+  try {
+    const pub  = await ElectroLab.AppState.getPublishedPracticas();
+    const myId = ElectroLab.AppState.currentUser?.id || '';
+    const subs = myId ? await ElectroLab.AppState.getStudentSubmissions(myId) : [];
+    const submittedIds = new Set(subs.map(s => s.practiceId));
+    const pending = pub.filter(p => !submittedIds.has(p.id));
 
-function refreshStudentDashboard() {
-  const state      = ElectroLab.AppState;
-  const published  = state.getPublishedPractices();
-  const submissions = state.getStudentSubmissions(state.currentUser?.id || 'stu-001');
-  const submittedIds = new Set(submissions.map(s => s.practiceId));
-  const pending    = published.filter(p => !submittedIds.has(p.id));
+    const user = ElectroLab.AppState.currentUser;
+    document.getElementById('dash-subtitle').textContent =
+      `// Bienvenido, ${user?.name || 'Alumno'} — Electrotecnia IPN`;
+    document.getElementById('dash-completed').textContent = subs.length;
+    document.getElementById('dash-pending').textContent   = pending.length;
+    document.getElementById('dash-total').textContent     = pub.length;
 
-  // Subtitle
-  const user = state.currentUser;
-  document.getElementById('dash-subtitle').textContent =
-    `// Bienvenido, ${user?.name || 'Alumno'} — Electrotecnia IPN`;
-
-  // Stats
-  document.getElementById('dash-completed').textContent = submissions.length;
-  document.getElementById('dash-pending').textContent   = pending.length;
-  document.getElementById('dash-total').textContent     = published.length;
-
-  // Lista de prácticas disponibles
-  const dpl = document.getElementById('dash-prac-list');
-  if (published.length === 0) {
-    dpl.innerHTML = '<div class="empty"><div class="eico">📭</div><div class="etxt">El docente aún no ha publicado prácticas.</div></div>';
-  } else {
-    dpl.innerHTML = published.map(p => `
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
-        <div>
-          <div style="font-weight:600">${p.num} — ${p.title}</div>
-          <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${'⭐'.repeat(p.difficulty)} · ${p.deliveryType === 'photo' ? '📷 Foto' : p.deliveryType === 'quiz' ? '📝 Quiz' : '📋 Ambos'}</div>
-        </div>
-        <span class="tag ${submittedIds.has(p.id) ? 'tg' : 'tw'}">${submittedIds.has(p.id) ? '✓ Entregada' : 'Pendiente'}</span>
-      </div>`).join('');
-  }
-
-  // Mis entregas
-  const ds = document.getElementById('dash-submissions');
-  if (submissions.length === 0) {
-    ds.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">No has entregado nada todavía.</div></div>';
-  } else {
-    ds.innerHTML = submissions.map(s => {
-      const prac = state.practices.find(p => p.id === s.practiceId);
-      return `
+    const dpl = document.getElementById('dash-prac-list');
+    if (pub.length === 0) {
+      dpl.innerHTML = '<div class="empty"><div class="eico">📭</div><div class="etxt">El docente aún no ha publicado prácticas.</div></div>';
+    } else {
+      dpl.innerHTML = pub.map(p => `
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
           <div>
-            <div style="font-weight:600">${prac?.title || 'Práctica'}</div>
-            <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${ElectroLab.formatDate(s.submittedAt)}</div>
+            <div style="font-weight:600">${p.num} — ${p.title}</div>
+            <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${'⭐'.repeat(p.difficulty||1)} · ${p.deliveryType==='photo'?'📷 Foto':p.deliveryType==='quiz'?'📝 Quiz':'📋 Ambos'}</div>
           </div>
-          ${s.grade != null
-            ? `<span class="tag tg">${s.grade}/10</span>`
-            : '<span class="tag tw">Sin calificar</span>'}
-        </div>`;
-    }).join('');
+          <span class="tag ${submittedIds.has(p.id)?'tg':'tw'}">${submittedIds.has(p.id)?'✓ Entregada':'Pendiente'}</span>
+        </div>`).join('');
+    }
+
+    const ds = document.getElementById('dash-submissions');
+    if (subs.length === 0) {
+      ds.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">No has entregado nada todavía.</div></div>';
+    } else {
+      const pracs = await ElectroLab.AppState.getPracticas();
+      ds.innerHTML = subs.map(s => {
+        const prac = pracs.find(p => p.id === s.practiceId);
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
+            <div>
+              <div style="font-weight:600">${prac?.title || 'Práctica'}</div>
+              <div style="color:var(--td);font-size:11px;font-family:var(--mono)">${ElectroLab.formatDate(s.submittedAt)}</div>
+            </div>
+            ${s.grade != null ? `<span class="tag tg">${s.grade}/10</span>` : '<span class="tag tw">Sin calificar</span>'}
+          </div>`;
+      }).join('');
+    }
+  } catch (err) {
+    console.warn('[Dashboard alumno]', err.message);
   }
 }
 
 
-// ============================================================
-// DASHBOARD DOCENTE
-// ============================================================
+async function refreshTeacherDashboard() {
+  try {
+    const pracs   = await ElectroLab.AppState.getPracticas();
+    const pub     = pracs.filter(p => p.status === 'published');
+    const all_sub = await ElectroLab.AppState.getEntregas();
+    const pending = all_sub.filter(e => e.grade === null);
+    const alumnos = await ElectroLab.AppState.getAlumnos();
 
-function refreshTeacherDashboard() {
-  const state    = ElectroLab.AppState;
-  const pending  = state.getPendingGrading();
-  const published = state.getPublishedPractices();
+    document.getElementById('teacher-subtitle').textContent =
+      `// ${ElectroLab.AppState.currentUser?.name || 'Docente'} — Electrotecnia IPN`;
+    document.getElementById('t-total-pracs').textContent   = pracs.length;
+    document.getElementById('t-published').textContent     = pub.length;
+    document.getElementById('t-pending-grade').textContent = pending.length;
 
-  document.getElementById('teacher-subtitle').textContent =
-    `// ${state.currentUser?.name || 'Docente'} — Electrotecnia IPN`;
+    const tse = document.getElementById('t-total-submissions');
+    if (tse) tse.textContent = all_sub.length;
 
-  document.getElementById('t-total-pracs').textContent   = state.practices.length;
-  document.getElementById('t-published').textContent     = published.length;
-  document.getElementById('t-pending-grade').textContent = pending.length;
+    const tr = document.getElementById('t-recent-submissions');
+    const recent = [...all_sub].sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt)).slice(0,5);
+    if (recent.length === 0) {
+      tr.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">Sin entregas todavía.</div></div>';
+    } else {
+      tr.innerHTML = recent.map(s => {
+        const prac = pracs.find(p => p.id === s.practiceId);
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
+            <div>
+              <div style="font-weight:600">${s.studentName}</div>
+              <div style="color:var(--td);font-size:11px">${prac?.num||''} ${prac?.title||''}</div>
+            </div>
+            ${s.grade != null ? `<span class="tag tg">${s.grade}/10</span>` : '<span class="tag tw">Sin calificar</span>'}
+          </div>`;
+      }).join('');
+    }
 
-  // Entregas recientes
-  const tr = document.getElementById('t-recent-submissions');
-  const recent = [...state.submissions].sort((a,b) => b.submittedAt - a.submittedAt).slice(0, 5);
-  if (recent.length === 0) {
-    tr.innerHTML = '<div class="empty"><div class="eico">📮</div><div class="etxt">Sin entregas todavía.</div></div>';
-  } else {
-    tr.innerHTML = recent.map(s => {
-      const prac = state.practices.find(p => p.id === s.practiceId);
-      return `
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--b)">
-          <div>
-            <div style="font-weight:600">${s.studentName}</div>
-            <div style="color:var(--td);font-size:11px">${prac?.num} ${prac?.title || ''}</div>
-          </div>
-          ${s.grade != null
-            ? `<span class="tag tg">${s.grade}/10</span>`
-            : '<span class="tag tw">Sin calificar</span>'}
-        </div>`;
-    }).join('');
+    const tg = document.getElementById('t-group-status');
+    if (pub.length === 0) {
+      tg.innerHTML = '<div class="empty"><div class="eico">👥</div><div class="etxt">Publica prácticas para ver el progreso.</div></div>';
+    } else {
+      tg.innerHTML = pub.map(p => {
+        const count = all_sub.filter(s => s.practiceId === p.id).length;
+        const total = alumnos.length;
+        const pct   = total ? Math.round(count / total * 100) : 0;
+        return `
+          <div style="margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+              <span>${p.num} ${p.title.substring(0,30)}…</span>
+              <span style="font-family:var(--mono);color:var(--td)">${count}/${total}</span>
+            </div>
+            <div class="pw"><div class="pb" style="width:${pct}%"></div></div>
+          </div>`;
+      }).join('');
+    }
+
+    await ElectroLab.renderStudentList();
+    await ElectroLab.renderStudentCount();
+    await ElectroLab.populateForumSelects();
+    await ElectroLab.populateMaterialSelects();
+    await ElectroLab.renderMaterialList();
+  } catch (err) {
+    console.warn('[Dashboard docente]', err.message);
   }
-
-  // Estado del grupo
-  const tg = document.getElementById('t-group-status');
-  if (published.length === 0) {
-    tg.innerHTML = '<div class="empty"><div class="eico">👥</div><div class="etxt">Publica prácticas para ver el progreso.</div></div>';
-  } else {
-    tg.innerHTML = published.map(p => {
-      const count = state.submissions.filter(s => s.practiceId === p.id).length;
-      const total = state.students.length;
-      const pct   = total ? Math.round(count / total * 100) : 0;
-      return `
-        <div style="margin-bottom:6px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span>${p.num} ${p.title.substring(0,30)}…</span>
-            <span style="font-family:var(--mono);color:var(--td)">${count}/${total}</span>
-          </div>
-          <div class="pw"><div class="pb" style="width:${pct}%"></div></div>
-        </div>`;
-    }).join('');
-  }
-
-  // Tabla de alumnos (usa renderStudentList del backend)
-  ElectroLab.renderStudentList();
-  ElectroLab.renderStudentCount();
-
-  // Actualizar contador de entregas totales
-  const tse = document.getElementById('t-total-submissions');
-  if (tse) tse.textContent = state._submissions.length;
-
-  // Selectores del foro y materiales
-  populateForumSelects();
-  populateMaterialSelects();
-  renderMaterialList();
 }
 
-
-// ============================================================
-// SELECTORES DEL FORO Y MATERIALES
-// ============================================================
 
 function populateForumSelects() {
-  const state    = ElectroLab.AppState;
-  const stuSel   = document.getElementById('foro-student');
-  const pracSel  = document.getElementById('foro-practice');
-  if (stuSel)  stuSel.innerHTML  = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-  if (pracSel) pracSel.innerHTML = '<option value="">— Selecciona —</option>' +
-    state.getPublishedPractices().map(p => `<option value="${p.id}">${p.num} — ${p.title}</option>`).join('');
+  ElectroLab.populateForumSelects();
 }
 
 function populateMaterialSelects() {
-  const sel = document.getElementById('mat-practice');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— General —</option>' +
-    ElectroLab.AppState.getPublishedPractices()
-      .map(p => `<option value="${p.id}">${p.num} — ${p.title}</option>`).join('');
+  ElectroLab.populateMaterialSelects();
 }
 
-
-// ============================================================
-// MATERIALES DEL REPOSITORIO
-// ============================================================
-
-let _pendingMaterialFile = null; // FileRecord temporal antes de guardar
-
-async function handleMaterialUpload(event) {
-  await ElectroLab.handleFileInput(event, (record) => {
-    _pendingMaterialFile = record;
-  }, 'material');
+function handleMaterialUpload(event) {
+  ElectroLab.handleMaterialUpload(event);
 }
 
 function saveMaterial() {
-  if (!_pendingMaterialFile) {
-    ElectroLab.notify('Primero selecciona un archivo.', 'error');
-    return;
-  }
-  const title    = document.getElementById('mat-title')?.value?.trim() || _pendingMaterialFile.name;
-  const category = document.getElementById('mat-category')?.value || 'pdf';
-  const practiceId = document.getElementById('mat-practice')?.value || null;
-
-  ElectroLab.AppState.addMaterial(_pendingMaterialFile, { category, practiceId });
-  _pendingMaterialFile = null;
-
-  // Limpiar form
-  if (document.getElementById('mat-title')) document.getElementById('mat-title').value = '';
-  resetDropZoneById('mat-drop');
-  renderMaterialList();
-  renderLabMaterials();
-}
-
-function resetDropZoneById(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = `
-    <input type="file" id="mat-file-input"
-           accept=".pdf,.ino,image/jpeg,image/png,video/mp4,video/quicktime"
-           onchange="handleMaterialUpload(event)">
-    <div style="font-size:32px;margin-bottom:8px">📤</div>
-    <div style="font-family:var(--mono);font-size:12px;color:var(--td)">Arrastra el archivo aquí</div>
-    <div style="font-size:11px;color:var(--tf);margin-top:4px">PDF · .ino · PNG · JPG · MP4 · máx. 50 MB</div>`;
+  ElectroLab.saveMaterial();
 }
 
 function renderMaterialList() {
-  const el = document.getElementById('mat-list');
-  if (!el) return;
-  const mats = ElectroLab.AppState.materials;
-  if (mats.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="eico">📂</div><div class="etxt">Sin materiales subidos todavía.</div></div>';
-    return;
-  }
-  el.innerHTML = mats.map(m => {
-    const icons = { pdf:'📄', video:'🎥', code:'💾', image:'🖼️', other:'📁' };
-    return `
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--b)">
-        <span style="font-size:18px">${icons[m.category] || '📁'}</span>
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</span>
-        <span class="tag tb">${m.ext.toUpperCase()}</span>
-        <button class="btn bg btn-sm"
-          onclick="ElectroLab.AppState.materials.splice(ElectroLab.AppState.materials.findIndex(x=>x.id==='${m.id}'),1);renderMaterialList()">✕</button>
-      </div>`;
-  }).join('');
+  ElectroLab.renderMaterialList();
 }
 
-/** Renderiza los materiales del docente en el Lab Virtual del alumno */
 function renderLabMaterials() {
-  const el = document.getElementById('lab-materials');
-  if (!el) return;
-  const mats = ElectroLab.AppState.materials;
-  if (mats.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="eico">📂</div><div class="etxt">El docente aún no ha subido materiales.</div></div>';
-    return;
-  }
-  const icons = { pdf:'📄', video:'🎥', code:'💾', image:'🖼️', other:'📁' };
-  el.innerHTML = mats.map(m => `
-    <div class="card" style="display:flex;align-items:center;gap:14px;cursor:pointer"
-         onclick="downloadMaterial('${m.id}')">
-      <div style="font-size:32px;flex-shrink:0">${icons[m.category] || '📁'}</div>
-      <div style="flex:1">
-        <div class="card-t">${m.name}</div>
-        <div style="color:var(--td);font-size:12px;margin-top:3px">${ElectroLab.formatDate(m.uploadedAt)}</div>
-      </div>
-      <span class="tag tb">${m.ext.toUpperCase()}</span>
-    </div>`).join('');
+  ElectroLab.renderLabMaterials();
 }
 
-/** Descarga un material guardado como base64 */
-function downloadMaterial(matId) {
-  const m = ElectroLab.AppState.materials.find(x => x.id === matId);
-  if (!m) return;
-  const a = document.createElement('a');
-  a.href     = m.dataUrl;
-  a.download = m.name;
-  a.click();
-}
-
-
-// ============================================================
-// ARCHIVOS EN EL EDITOR
-// ============================================================
-
-const _editorFiles = []; // FileRecords adjuntos a la práctica en curso
-
-async function handleEditorFiles(event) {
-  const files = [...(event.target.files || [])];
-  for (const file of files) {
-    try {
-      const record = await ElectroLab.validateAndReadFile(file, 'material');
-      _editorFiles.push(record);
-      renderEditorFileList();
-    } catch (_) { /* validación ya notificada */ }
-  }
+function handleEditorFiles(event) {
+  ElectroLab.handleEditorFiles(event);
 }
 
 function renderEditorFileList() {
-  const el = document.getElementById('editor-file-list');
-  if (!el) return;
-  el.innerHTML = _editorFiles.map((f, i) => `
-    <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--b)">
-      <span>📎</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${f.name}</span>
-      <span style="font-family:var(--mono);color:var(--tf)">${ElectroLab.formatBytes(f.sizeBytes)}</span>
-      <button class="btn bg btn-sm" onclick="_editorFiles.splice(${i},1);renderEditorFileList()">✕</button>
-    </div>`).join('');
+  ElectroLab.renderEditorFileList();
 }
 
-
-// ============================================================
-// EDITOR — HELPERS
-// ============================================================
-
-let _stepCount = 1;
-
 function addStep() {
-  _stepCount++;
-  const container = document.getElementById('ed-steps');
-  const row = document.createElement('div');
-  row.className = 'step-row';
-  row.style.cssText = 'display:flex;gap:8px;align-items:flex-start';
-  row.innerHTML = `
-    <span class="tag tc" style="flex-shrink:0;margin-top:8px">${String(_stepCount).padStart(2,'0')}</span>
-    <textarea placeholder="Paso ${_stepCount}…" style="flex:1;min-height:56px"></textarea>
-    <button class="btn bg btn-sm" style="margin-top:8px" onclick="this.parentElement.remove()">✕</button>`;
-  container.appendChild(row);
+  ElectroLab.addStep();
 }
 
 function addCustomComponent() {
-  const name = prompt('Nombre del componente:');
-  if (!name?.trim()) return;
-  const list = document.getElementById('ed-comp-list');
-  const row  = document.createElement('div');
-  row.className = 'chi';
-  row.innerHTML = `<input type="checkbox" checked><span>${name.trim()}</span>`;
-  list.appendChild(row);
+  ElectroLab.addCustomComponent();
 }
 
 
-// ============================================================
-// MODAL DE PRÁCTICA
-// ============================================================
-
 function openPrac(id) {
-  const p = ElectroLab.AppState.practices.find(x => x.id === id);
-  if (!p) return;
+  ElectroLab.AppState.getPracticas().then(pracs => {
+    const p = pracs.find(x => x.id === id);
+    if (!p) return;
 
-  document.getElementById('m-num').textContent   = p.num;
-  document.getElementById('m-title').textContent = p.title;
-  document.getElementById('m-obj').textContent   = p.objective;
-  document.getElementById('m-diff').textContent  = '⭐'.repeat(p.difficulty) + '☆'.repeat(3 - p.difficulty);
+    document.getElementById('m-num').textContent   = p.num;
+    document.getElementById('m-title').textContent = p.title;
+    document.getElementById('m-obj').textContent   = p.objective;
+    document.getElementById('m-diff').textContent  = '⭐'.repeat(p.difficulty||1) + '☆'.repeat(3-(p.difficulty||1));
 
-  document.getElementById('m-checklist').innerHTML = (p.components || []).map(c =>
-    `<div class="chi"><input type="checkbox"><span>${c}</span></div>`).join('') ||
-    '<div style="color:var(--tf);font-size:13px">Sin componentes definidos.</div>';
+    document.getElementById('m-checklist').innerHTML = (p.components||[]).map(c =>
+      `<div class="chi"><input type="checkbox"><span>${c}</span></div>`).join('') ||
+      '<div style="color:var(--tf);font-size:13px">Sin componentes definidos.</div>';
 
-  document.getElementById('m-circuit').textContent = p.circuitDiagram || '— Sin diagrama —';
+    document.getElementById('m-circuit').textContent = p.circuitDiagram || '— Sin diagrama —';
 
-  document.getElementById('m-steps').innerHTML = (p.steps || []).map((s, i) => `
-    <div style="display:flex;gap:10px;align-items:flex-start">
-      <span class="tag tc" style="flex-shrink:0">${String(i+1).padStart(2,'0')}</span>
-      <div style="font-size:13px;line-height:1.5;padding-top:2px">${s}</div>
-    </div>`).join('') || '<div style="color:var(--tf);font-size:13px">Sin pasos definidos.</div>';
+    document.getElementById('m-steps').innerHTML = (p.steps||[]).map((s,i) => `
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span class="tag tc" style="flex-shrink:0">${String(i+1).padStart(2,'0')}</span>
+        <div style="font-size:13px;line-height:1.5;padding-top:2px">${s}</div>
+      </div>`).join('') || '<div style="color:var(--tf);font-size:13px">Sin pasos definidos.</div>';
 
-  const codeEl = document.getElementById('m-code');
-  const codeWrap = document.getElementById('m-code-wrap');
-  if (p.codeSnippet) {
-    codeEl.textContent  = p.codeSnippet;
-    codeWrap.style.display = 'block';
-  } else {
-    codeWrap.style.display = 'none';
-  }
+    const codeEl   = document.getElementById('m-code');
+    const codeWrap = document.getElementById('m-code-wrap');
+    if (p.codeSnippet) {
+      codeEl.textContent      = p.codeSnippet;
+      codeWrap.style.display  = 'block';
+    } else {
+      codeWrap.style.display  = 'none';
+    }
 
-  document.getElementById('prac-modal').classList.add('on');
-  document.body.style.overflow = 'hidden';
+    document.getElementById('prac-modal').classList.add('on');
+    document.body.style.overflow = 'hidden';
+  });
 }
 
 function closeModal() {
@@ -1376,12 +1206,7 @@ document.getElementById('prac-modal').addEventListener('click', e => {
 });
 
 
-// ============================================================
-// HARDWARE PAGES — RENDER ESTÁTICO
-// ============================================================
-
 function renderHardwarePages() {
-  // Componentes
   const hcl = document.getElementById('hw-comp-list');
   if (hcl) hcl.innerHTML = HW_COMPONENTS.map(c => `
     <div class="comp">
@@ -1393,7 +1218,6 @@ function renderHardwarePages() {
       </div>
     </div>`).join('');
 
-  // Circuitos
   const cl = document.getElementById('circuitos-list');
   if (cl) cl.innerHTML = HW_CIRCUITS.map(c => `
     <div class="card">
@@ -1402,11 +1226,10 @@ function renderHardwarePages() {
         <span class="tag tw">${c.level}</span>
       </div>
       <div style="color:var(--td);font-size:13px;margin-bottom:12px">${c.desc}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${c.comps.map(x => `<span class="tag tb">${x}</span>`).join('')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${c.comps.map(x=>`<span class="tag tb">${x}</span>`).join('')}</div>
       <div class="circuit">${c.diagram}</div>
     </div>`).join('');
 
-  // Código
   const cdl = document.getElementById('code-list');
   if (cdl) cdl.innerHTML = HW_CODES.map(c => `
     <div class="card">
@@ -1414,7 +1237,6 @@ function renderHardwarePages() {
       <div style="background:#020912;border-radius:6px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--a2);white-space:pre-wrap">${c.code}</div>
     </div>`).join('');
 
-  // Componentes (página del alumno también)
   const cc = document.getElementById('comp-cards');
   if (cc) cc.innerHTML = HW_COMPONENTS.map(c => `
     <div class="comp">
@@ -1428,61 +1250,9 @@ function renderHardwarePages() {
 }
 
 
-// ============================================================
-// PRÁCTICA CARD HTML (alumno)
-// ============================================================
-
-function buildPracticeCardHTML(p) {
-  const state = ElectroLab.AppState;
-  const subs  = state.getStudentSubmissions(state.currentUser?.id || 'stu-001');
-  const submitted = subs.some(s => s.practiceId === p.id);
-  const stars = '⭐'.repeat(p.difficulty) + '☆'.repeat(3 - p.difficulty);
-  const statusTag = submitted
-    ? '<span class="tag tg">✓ Entregada</span>'
-    : '<span class="tag tw">Pendiente</span>';
-
-  return `
-    <div class="pcard" onclick="openPrac('${p.id}')">
-      <div class="pch">
-        <span class="pnum">${p.num}</span>
-        <div class="pt">${p.title}</div>
-      </div>
-      <div class="pb2">${p.objective?.substring(0, 100) || ''}${p.objective?.length > 100 ? '…' : ''}</div>
-      <div class="pf">
-        <span style="color:var(--aw);font-size:12px">${stars}</span>
-        ${statusTag}
-      </div>
-    </div>`;
-}
-
-
-// ============================================================
-// OVERRIDES DE FUNCIONES DEL BACKEND (para UI)
-// Las funciones del backend llaman a estas al hacer render
-// ============================================================
-
-// Sobrescribir renderStudentPractices del backend para usar buildPracticeCardHTML
-const _origRenderStudentPractices = ElectroLab.renderStudentPractices;
-ElectroLab.renderStudentPractices = function() {
-  const container = document.getElementById('prac-list');
-  if (!container) return;
-  const published = ElectroLab.AppState.getPublishedPractices();
-  if (published.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="eico">📭</div><div class="etxt">Aún no hay prácticas publicadas.</div><div class="esub">Tu maestro las irá subiendo.</div></div>';
-  } else {
-    container.innerHTML = published.map(p => buildPracticeCardHTML(p)).join('');
-  }
-};
-
-
-// ============================================================
-// INIT
-// ============================================================
-
 window.addEventListener('DOMContentLoaded', () => {
   renderHardwarePages();
   refreshStudentDashboard();
-  // Cargar componentes en la página del alumno también
   const cc = document.getElementById('comp-cards');
   if (cc && cc.children.length === 0) {
     cc.innerHTML = HW_COMPONENTS.map(c => `
